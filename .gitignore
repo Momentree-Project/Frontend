@@ -22,7 +22,3 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-
-.env.local
-.package-lock.json
-package-lock.json
