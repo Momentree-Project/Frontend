@@ -1,11 +1,11 @@
 body {
-    background: #e5e7df;
+    background: #ECEBE4; /* 따뜻한 아이보리톤 */
     font-family: 'Noto Sans KR', sans-serif;
     margin: 0;
 }
 
 .container {
-    background-color: #e5e7df;
+    background-color: #ECEBE4; /* 메인 배경 */
     padding: 32px 0;
     max-width: 420px;
     margin: 0 auto;
@@ -15,7 +15,7 @@ body {
 }
 
 .card {
-    background: #f8f8f4;
+    background: #F6F5F0; /* 카드 배경 */
     border-radius: 22px;
     box-shadow: 0 2px 12px #e2e5db;
     padding: 24px 20px;
@@ -27,23 +27,23 @@ body {
 
 .greeting-card .date-label {
     font-size: 16px;
-    color: #a5b299;
+    color: #A3B29F; /* 서브 포인트 */
     margin-bottom: 4px;
 }
 
 .greeting-title {
     font-size: 20px;
     font-weight: 700;
-    color: #4a5b44;
+    color: #3C3C3C; /* 텍스트 주요색 */
     margin-bottom: 8px;
 }
 
 .d-day-box {
-    background: #e6efd8;
+    background: #E6EDE4; /* 서브 포인트를 살짝 밝게 */
     border-radius: 12px;
     padding: 10px 14px;
     font-size: 15px;
-    color: #4a5b44;
+    color: #5D6A5A; /* 메인 포인트 */
     display: flex;
     flex-direction: column;
     gap: 2px;
@@ -51,18 +51,18 @@ body {
 
 .d-day-sub {
     font-size: 13px;
-    color: #a5b299;
+    color: #A3B29F; /* 서브 포인트 */
 }
 
 .today-box {
-    background: #f9faf7;
+    background: #F9FAF7;
     border-radius: 12px;
     padding: 12px 14px;
     display: flex;
     align-items: center;
     gap: 10px;
     font-size: 16px;
-    color: #4a5b44;
+    color: #5D6A5A; /* 메인 포인트 */
     font-weight: 500;
 }
 
@@ -74,10 +74,11 @@ body {
 .today-weather {
     margin-left: auto;
     font-size: 18px;
+    color: #F8D37D; /* 햇살 아이콘색 */
 }
 
 .map-btn {
-    background: #7c8e6e;
+    background: #5D6A5A; /* 메인 포인트 */
     color: #fff;
     border: none;
     border-radius: 10px;
@@ -90,13 +91,13 @@ body {
 }
 
 .map-btn:hover {
-    background: #6a7c5d;
+    background: #3C3C3C; /* 텍스트 주요색(딥그레이)로 호버 */
 }
 
 .calendar-card .calendar-header {
     font-size: 17px;
     font-weight: 600;
-    color: #4a5b44;
+    color: #5D6A5A; /* 메인 포인트 */
     margin-bottom: 8px;
 }
 
@@ -114,22 +115,22 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    color: #4a5b44;
+    color: #3C3C3C; /* 텍스트 주요색 */
     font-size: 15px;
     box-shadow: 0 1px 4px #eaece3;
 }
 
 .schedule-weather {
-    color: #a5b299;
+    color: #A3B29F; /* 서브 포인트 */
     font-size: 14px;
 }
 
 /* ===== 감성 달력 스타일 ===== */
 .react-calendar {
-    background: #f8f8f4;
+    background: #F6F5F0; /* 카드 배경 */
     border-radius: 16px;
     box-shadow: 0 2px 12px #e2e5db;
-    border: 1.5px solid #e0e7d3;
+    border: 1.5px solid #E6EDE4; /* 서브 포인트 계열 */
     margin-bottom: 10px;
     font-family: 'Noto Sans KR', sans-serif;
     padding: 14px 8px 12px 8px;
@@ -138,7 +139,7 @@ body {
 
 .react-calendar__navigation {
     background: none;
-    color: #6a7c5d;
+    color: #5D6A5A; /* 메인 포인트 */
     font-weight: 600;
     font-size: 18px;
     margin-bottom: 4px;
@@ -156,7 +157,7 @@ body {
 
 .react-calendar__month-view__weekdays {
     background: none;
-    color: #a5b299;
+    color: #A3B29F; /* 서브 포인트 */
     font-weight: 500;
     font-size: 14px;
     text-align: center;
@@ -165,7 +166,7 @@ body {
 
 .react-calendar__month-view__weekdays__weekday {
     padding: 6px 0;
-    color: #6a7c5d;
+    color: #A3B29F; /* 서브 포인트 */
     font-weight: 600;
     font-size: 14px;
 }
@@ -185,7 +186,7 @@ body {
 }
 
 .react-calendar__tile {
-    color: #4a5b44;
+    color: #5D6A5A; /* 메인 포인트 */
     font-weight: 500;
     font-size: 15px;
     border-radius: 8px;
@@ -194,33 +195,31 @@ body {
 }
 
 .react-calendar__tile--now {
-    background: #e6efd8 !important;
-    color: #4a5b44 !important;
+    background: #E6EDE4 !important; /* 서브 포인트 밝은톤 */
+    color: #5D6A5A !important;
     border-radius: 8px;
 }
 
 .react-calendar__tile--active {
-    background: #c9e5b4 !important;
-    color: #43503c !important;
+    background: #A3B29F !important; /* 서브 포인트 */
+    color: #fff !important;
     border-radius: 8px;
     font-weight: 700;
 }
 
 .has-schedule {
-    background: #fff6d1 !important;
+    background: #FFF6D1 !important;
     border-radius: 8px;
-    color: #7c8e6e !important;
+    color: #5D6A5A !important;
     font-weight: 700;
-    border: 1.5px solid #f5d97c;
+    border: 1.5px solid #F8D37D;
 }
 
 /* 날짜 숫자 색상 */
 .react-calendar__tile.sunday {
-    color: #e57373 !important;
-    /* 일요일: 따뜻한 레드 */
+    color: #fa8e8e !important;
 }
 
 .react-calendar__tile.saturday {
-    color: #64b5f6 !important;
-    /* 토요일: 감성 블루 */
+    color: #7ecbff !important;
 }
