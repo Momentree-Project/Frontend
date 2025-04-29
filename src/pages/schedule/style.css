@@ -1,0 +1,226 @@
+body {
+    background: #e5e7df;
+    font-family: 'Noto Sans KR', sans-serif;
+    margin: 0;
+}
+
+.container {
+    background-color: #e5e7df;
+    padding: 32px 0;
+    max-width: 420px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+}
+
+.card {
+    background: #f8f8f4;
+    border-radius: 22px;
+    box-shadow: 0 2px 12px #e2e5db;
+    padding: 24px 20px;
+    margin-bottom: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.greeting-card .date-label {
+    font-size: 16px;
+    color: #a5b299;
+    margin-bottom: 4px;
+}
+
+.greeting-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #4a5b44;
+    margin-bottom: 8px;
+}
+
+.d-day-box {
+    background: #e6efd8;
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 15px;
+    color: #4a5b44;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.d-day-sub {
+    font-size: 13px;
+    color: #a5b299;
+}
+
+.today-box {
+    background: #f9faf7;
+    border-radius: 12px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 16px;
+    color: #4a5b44;
+    font-weight: 500;
+}
+
+.today-title {
+    margin-left: 6px;
+    font-weight: 700;
+}
+
+.today-weather {
+    margin-left: auto;
+    font-size: 18px;
+}
+
+.map-btn {
+    background: #7c8e6e;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 12px 0;
+    font-size: 16px;
+    font-weight: 600;
+    margin-top: 8px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.map-btn:hover {
+    background: #6a7c5d;
+}
+
+.calendar-card .calendar-header {
+    font-size: 17px;
+    font-weight: 600;
+    color: #4a5b44;
+    margin-bottom: 8px;
+}
+
+.schedule-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.schedule-item {
+    background: #fff;
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #4a5b44;
+    font-size: 15px;
+    box-shadow: 0 1px 4px #eaece3;
+}
+
+.schedule-weather {
+    color: #a5b299;
+    font-size: 14px;
+}
+
+/* ===== 감성 달력 스타일 ===== */
+.react-calendar {
+    background: #f8f8f4;
+    border-radius: 16px;
+    box-shadow: 0 2px 12px #e2e5db;
+    border: 1.5px solid #e0e7d3;
+    margin-bottom: 10px;
+    font-family: 'Noto Sans KR', sans-serif;
+    padding: 14px 8px 12px 8px;
+    transition: box-shadow 0.2s;
+}
+
+.react-calendar__navigation {
+    background: none;
+    color: #6a7c5d;
+    font-weight: 600;
+    font-size: 18px;
+    margin-bottom: 4px;
+}
+
+.react-calendar__navigation button {
+    min-width: 36px;
+    background: none;
+    color: inherit;
+    font-size: inherit;
+    border: none;
+    padding: 4px 0;
+    cursor: pointer;
+}
+
+.react-calendar__month-view__weekdays {
+    background: none;
+    color: #a5b299;
+    font-weight: 500;
+    font-size: 14px;
+    text-align: center;
+    text-transform: none;
+}
+
+.react-calendar__month-view__weekdays__weekday {
+    padding: 6px 0;
+    color: #6a7c5d;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.react-calendar__month-view__weekdays abbr {
+    text-decoration: none;
+}
+
+.react-calendar__month-view__weekdays__weekday:first-child {
+    color: #fa8e8e;   /* 파스텔 레드 */
+    font-weight: 700;
+}
+
+.react-calendar__month-view__weekdays__weekday:last-child {
+    color: #7ecbff;   /* 파스텔 블루 */
+    font-weight: 700;
+}
+
+.react-calendar__tile {
+    color: #4a5b44;
+    font-weight: 500;
+    font-size: 15px;
+    border-radius: 8px;
+    transition: background 0.2s, color 0.2s;
+    padding: 8px 0;
+}
+
+.react-calendar__tile--now {
+    background: #e6efd8 !important;
+    color: #4a5b44 !important;
+    border-radius: 8px;
+}
+
+.react-calendar__tile--active {
+    background: #c9e5b4 !important;
+    color: #43503c !important;
+    border-radius: 8px;
+    font-weight: 700;
+}
+
+.has-schedule {
+    background: #fff6d1 !important;
+    border-radius: 8px;
+    color: #7c8e6e !important;
+    font-weight: 700;
+    border: 1.5px solid #f5d97c;
+}
+
+/* 날짜 숫자 색상 */
+.react-calendar__tile.sunday {
+    color: #e57373 !important;
+    /* 일요일: 따뜻한 레드 */
+}
+
+.react-calendar__tile.saturday {
+    color: #64b5f6 !important;
+    /* 토요일: 감성 블루 */
+}
