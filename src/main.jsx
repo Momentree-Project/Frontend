@@ -1,11 +1,10 @@
-import { StrictMode } from "react";
-import { createRoot } from "react-dom/client";
-import Schedule from "./pages/schedule/index.jsx";
-import Login from "./pages/auth/index.jsx";
+import React, { useEffect } from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App.jsx';
+import './index.css';
 
-createRoot(document.getElementById("root")).render(
-  <StrictMode>
-    <Login />
-    <Schedule />
-  </StrictMode>
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
 );
