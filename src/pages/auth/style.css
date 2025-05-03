@@ -1,0 +1,112 @@
+:root {
+  --main-bg: #ecebe4;
+  --main-point: #5d6a5a;
+  --sub-point: #a3b29f;
+  --text-main: #3c3c3c;
+  --text-sub: #7c7c7c;
+  --card-bg: #f6f5f0;
+  --sun-icon: #f8d37d;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--main-bg);
+  font-family: "Pretendard", "Apple SD Gothic Neo", sans-serif;
+  color: var(--text-main);
+}
+
+.main-bg {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  align-items: center;
+  justify-content: center;
+  background: var(--main-bg);
+}
+
+.card {
+  background: var(--card-bg);
+  border-radius: 18px;
+  box-shadow: 0 2px 8px rgba(93, 106, 90, 0.05);
+  padding: 36px 32px;
+  min-width: 320px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.main-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  font-size: 1rem;
+  color: var(--text-sub);
+  margin-bottom: 24px;
+}
+
+.btn-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.social-btn {
+  width: 100%;
+  padding: 12px 0;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.social-btn.google {
+  background: #fff;
+  color: #3c3c3c;
+  border: 1px solid var(--main-point);
+}
+
+.social-btn.naver {
+  background: #03c75a;
+  color: #fff;
+}
+
+.social-btn.kakao {
+  background: #fee500;
+  color: #3c1e1e;
+}
+
+.date-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.date-label {
+  font-size: 1rem;
+  color: var(--sub-point);
+  font-weight: 500;
+}
+
+.date-weather {
+  font-size: 1.2rem;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sun-icon {
+  font-size: 1.3rem;
+  color: var(--sun-icon);
+  margin-left: 4px;
+}
