@@ -1,18 +1,25 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Schedule from './pages/schedule/index.jsx'
-import Home from './pages/home/index.jsx';
-import Login from './pages/auth/index.jsx';
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Schedule from "./pages/schedule/index.jsx";
+import Home from "./pages/home/index.jsx";
+import Login from "./pages/auth/index.jsx";
+import CoupleConnect from "./pages/authCouple/index.jsx";
+import OAuth2RedirectHandler from "./pages/auth/OAuthRedirectHandler.jsx"; // OAuth 리다이렉트 핸들러 컴포넌트
 
 function App() {
-    return (
-        <Router>
-            <Routes>
-                <Route path="/home" element={<Home />} />
-                <Route path="/schedule" element={<Schedule />} />
-                <Route path='/' element={<Login />} />
-            </Routes>
-        </Router>
-    );
+  return (
+    <Router>
+      <Routes>
+        <Route path="/home" element={<Home />} />
+        <Route path="/schedule" element={<Schedule />} />
+        <Route
+          path="/login/oauth2/success"
+          element={<OAuth2RedirectHandler />}
+        />
+        <Route path="/connect" element={<CoupleConnect />} />
+        <Route path="/" element={<Login />} />
+      </Routes>
+    </Router>
+  );
 }
 
 export default App;
