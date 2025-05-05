@@ -36,6 +36,7 @@
     "postcss": "^8.5.3",
     "react": "^18.2.0",
     "react-calendar": "^5.1.0",
+    "react-datepicker": "^8.3.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^7.5.3",
     "tailwindcss": "3.4"
