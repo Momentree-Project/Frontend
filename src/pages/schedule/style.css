@@ -94,3 +94,8 @@
 .react-calendar__tile.saturday {
     color: #7ecbff !important;
 }
+
+.react-calendar__month-view__days__day--neighboringMonth {
+    opacity: 0.4;
+    color: #A3B29F !important;
+}
