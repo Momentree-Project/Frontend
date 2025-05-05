@@ -4,8 +4,16 @@ import axios from "axios";
 // 날짜 포맷팅 유틸 함수
 function formatDate(dateObj) {
     if (typeof dateObj === "string") return dateObj;
-    return dateObj.toISOString().slice(0, 10);
+
+    // 로컬 시간대 기준으로 연, 월, 일 추출
+    const year = dateObj.getFullYear();
+    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const day = String(dateObj.getDate()).padStart(2, '0');
+
+    // YYYY-MM-DD 형식으로 반환
+    return `${year}-${month}-${day}`;
 }
+
 
 // 스케줄 관련 로직을 담당하는 커스텀 훅
 export function useSchedule() {
