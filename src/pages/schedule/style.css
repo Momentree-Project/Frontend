@@ -1,14 +1,20 @@
+/* 캘린더 컨테이너 */
 .react-calendar {
-    background: #F6F5F0;
-    border-radius: 16px;
-    box-shadow: 0 2px 12px #e2e5db;
-    border: 1.5px solid #E6EDE4;
+    background-color: #FFFFFF !important;
+    border-radius: 16px !important;
+    box-shadow: 0 2px 12px #e2e5db !important;
+    border: 1.5px solid #E6EDE4 !important;
     margin-bottom: 10px;
     font-family: 'Noto Sans KR', sans-serif;
     padding: 14px 8px 12px 8px;
     transition: box-shadow 0.2s;
+    width: 100% !important;
+    /* 컨테이너 너비 최대화 */
+    max-width: 360px;
+    /* 최대 너비 제한 */
 }
 
+/* 네비게이션 (월 이동) */
 .react-calendar__navigation {
     background: none;
     color: #5D6A5A;
@@ -27,6 +33,7 @@
     cursor: pointer;
 }
 
+/* 요일 표시 */
 .react-calendar__month-view__weekdays {
     background: none;
     color: #A3B29F;
@@ -47,67 +54,146 @@
     text-decoration: none;
 }
 
+/* 일요일 요일 표시 */
 .react-calendar__month-view__weekdays__weekday:first-child {
     color: #fa8e8e;
     font-weight: 700;
 }
 
+/* 토요일 요일 표시 */
 .react-calendar__month-view__weekdays__weekday:last-child {
     color: #7ecbff;
     font-weight: 700;
 }
 
+/* 기본 날짜 타일 */
 .react-calendar__tile {
     color: #5D6A5A;
     font-weight: 500;
     font-size: 15px;
     border-radius: 8px;
-    transition: background 0.2s, color 0.2s;
-    padding: 8px 0;
+    transition: all 0.2s ease;
+    padding: 12px 0;
+    height: 44px;
+    position: relative;
+    border: 1px solid transparent;
 }
 
-.react-calendar__tile--now {
-    background: #E6EDE4 !important;
-    color: #5D6A5A !important;
-    border-radius: 8px;
-}
-
-.react-calendar__tile--active {
-    background: #A3B29F !important;
-    color: #fff !important;
-    border-radius: 8px;
-    font-weight: 700;
-}
-
-.has-schedule {
-    background: #FFF6D1 !important;
-    border-radius: 8px;
-    color: #5D6A5A !important;
-    font-weight: 700;
-    border: 1.5px solid #F8D37D;
-}
-
+/* 일요일 날짜 */
 .react-calendar__tile.sunday {
     color: #fa8e8e !important;
 }
 
+/* 토요일 날짜 */
 .react-calendar__tile.saturday {
     color: #7ecbff !important;
 }
 
+/* 이전/다음 달 날짜 */
 .react-calendar__month-view__days__day--neighboringMonth {
     opacity: 0.4;
     color: #A3B29F !important;
 }
 
-/* style.css에 추가 */
-.react-calendar {
-    background-color: #FFFFFF !important;
-    border-radius: 12px !important;
-    padding: 10px !important;
-    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.01) !important;
+/* 일정이 있는 날짜 - 밑줄로 표시 */
+.has-schedule {
+    text-decoration: underline !important;
+    text-decoration-color: #F8D37D !important;
+    text-decoration-thickness: 2px !important;
+    text-underline-offset: 4px !important;
 }
 
+.has-schedule::after {
+    display: none;
+}
+
+/* 오늘 날짜 - 동그라미로 표시 */
+.react-calendar__tile--now {
+    background: transparent !important;
+    color: #5D6A5A !important;
+    font-weight: 600;
+    position: relative;
+    z-index: 0;
+}
+
+/* 오늘 날짜 채워진 동그라미 효과 (일 뷰에서만) */
+.react-calendar__month-view .react-calendar__tile--now::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 32px;
+    height: 32px;
+    background-color: rgba(163, 178, 159, 0.15);
+    border-radius: 50%;
+    z-index: -1;
+    display: block !important;
+}
+
+/* 선택된 날짜 - 가장 강조 */
+.react-calendar__tile--active {
+    background: #A3B29F !important;
+    color: #fff !important;
+    border-radius: 8px;
+    font-weight: 700;
+    box-shadow: 0 2px 4px rgba(93, 106, 90, 0.15);
+}
+
+/* 선택된 날짜에 일정이 있을 때 - 점 색상 변경 */
+.react-calendar__tile--active.has-schedule::after {
+    background-color: #fff;
+}
+
+/* 선택된 토요일/일요일 - 글자색 흰색 */
+.react-calendar__tile--active.sunday,
+.react-calendar__tile--active.saturday {
+    color: #fff !important;
+}
+
+/* 선택된 오늘 날짜 - 동그라미 제거 */
+.react-calendar__tile--active.react-calendar__tile--now::before {
+    display: none;
+}
+
+/* 호버 효과 */
+.react-calendar__tile:hover:not(.react-calendar__tile--active) {
+    background-color: #F0F5ED !important;
+}
+
+/* 버튼 모서리 둥글게 */
 .react-calendar button {
     border-radius: 6px !important;
+}
+
+/* 월/년 뷰에서의 오늘 날짜 스타일 */
+.react-calendar__year-view .react-calendar__tile--now,
+.react-calendar__decade-view .react-calendar__tile--now,
+.react-calendar__century-view .react-calendar__tile--now {
+    background-color: rgba(163, 178, 159, 0.15) !important;
+    font-weight: 600;
+}
+
+/* 월/년 뷰에서는 before 가상 요소 제거 */
+.react-calendar__year-view .react-calendar__tile--now::before,
+.react-calendar__decade-view .react-calendar__tile--now::before,
+.react-calendar__century-view .react-calendar__tile--now::before {
+    display: none !important;
+}
+
+/* 월/년 뷰에서 텍스트 수직 가운데 정렬 */
+.react-calendar__year-view .react-calendar__tile,
+.react-calendar__decade-view .react-calendar__tile,
+.react-calendar__century-view .react-calendar__tile {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: 100% !important;
+}
+
+/* 월/년 뷰의 타일 높이 조정 */
+.react-calendar__year-view .react-calendar__tile,
+.react-calendar__decade-view .react-calendar__tile,
+.react-calendar__century-view .react-calendar__tile {
+    padding: 1.5em 0.5em !important;
 }
