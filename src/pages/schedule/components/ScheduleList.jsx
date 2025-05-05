@@ -1,14 +1,8 @@
-export function ScheduleList({ scheduleList, onAddClick }) {
+export function ScheduleList({ scheduleList }) {
     return (
         <>
             <div className="flex justify-between items-center mb-3">
                 <h3 className="text-[16px] font-semibold text-point m-0">일정 목록</h3>
-                <button
-                    onClick={onAddClick}
-                    className="bg-point text-white rounded-[8px] px-3 py-1 text-[14px] font-medium"
-                >
-                    일정 추가
-                </button>
             </div>
             <ul className="list-none p-0 m-0">
                 {scheduleList.map((item, idx) => (
