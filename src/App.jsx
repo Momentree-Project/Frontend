@@ -4,6 +4,7 @@ import Home from "./pages/home/index.jsx";
 import Login from "./pages/auth/index.jsx";
 import CoupleConnect from "./pages/authCouple/index.jsx";
 import OAuth2RedirectHandler from "./pages/auth/OAuthRedirectHandler.jsx"; // OAuth 리다이렉트 핸들러 컴포넌트
+import AdditionalInfo from "./pages/authAdditionalInfo/index.jsx"; // 추가 정보 입력 페이지
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
           path="/login/oauth2/success"
           element={<OAuth2RedirectHandler />}
         />
+        <Route path="/additional-info" element={<AdditionalInfo />} />
         <Route path="/connect" element={<CoupleConnect />} />
         <Route path="/" element={<Login />} />
       </Routes>
