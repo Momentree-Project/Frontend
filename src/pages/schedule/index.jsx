@@ -15,6 +15,8 @@ function Schedule() {
         scheduleList,
         hasScheduleOnDate,
         formatDate,
+        loading,
+        error
     } = useSchedule();
 
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -27,11 +29,9 @@ function Schedule() {
         setIsModalOpen(false);
     };
 
-    const handleSaveSchedule = (scheduleData) => {
-        // 여기서 API 호출 또는 상태 업데이트 로직을 구현
-        console.log("저장된 일정:", scheduleData);
-        // 실제 구현에서는 scheduleList를 업데이트하는 로직이 필요합니다
-    };
+    // 로딩 상태 처리
+    if (loading) return <div>로딩 중...</div>;
+    if (error) return <div>에러: {error}</div>;
 
     return (
         <div className="bg-mainbg min-h-screen font-noto">
@@ -73,7 +73,6 @@ function Schedule() {
                     isOpen={isModalOpen}
                     onClose={handleCloseModal}
                     selectedDate={selectedDate}
-                    onSave={handleSaveSchedule}
                 />
             </div>
         </div>

@@ -1,11 +1,14 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { useSchedule } from "../hooks/useSchedule";
 
-export function ScheduleModal({ isOpen, onClose, selectedDate, onSave }) {
+export function ScheduleModal({ isOpen, onClose, selectedDate }) {
+    // useSchedule 훅에서 addSchedule 함수 가져오기
+    const { addSchedule } = useSchedule();
+
     const [formData, setFormData] = useState({
-        coupleId: 1, // 기본값 또는 props로 받을 수 있음, 추후 수정 필요
+        coupleId: localStorage.getItem("coupleId"),
         categoryId: 4, // 기본값
         title: "",
         content: "",
@@ -67,26 +70,29 @@ export function ScheduleModal({ isOpen, onClose, selectedDate, onSave }) {
             endTime.setHours(23, 59, 59, 999);
         }
 
-        const scheduleData = {
-            ...formData,
-            startTime: startTime.toISOString(),
-            endTime: endTime.toISOString()
+        // 날짜와 시간을 직접 포맷팅하는 함수
+        const formatDateTime = (date) => {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            const seconds = String(date.getSeconds()).padStart(2, '0');
+
+            return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
         };
 
-        try {
-            const response = await axios.post('http://localhost:8080/api/v1/schedules', scheduleData, {
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
+        const scheduleData = {
+            ...formData,
+            startTime: formatDateTime(startTime),
+            endTime: formatDateTime(endTime)
+        };
 
-            if (response.status === 200) {
-                onSave(scheduleData);
-                onClose();
-            }
+        // useSchedule 훅의 addSchedule 함수 사용
+        const success = await addSchedule(scheduleData);
 
-        } catch (error) {
-            console.error('일정 추가 실패:', error);
+        if (success) {
+            onClose();
         }
     };
 

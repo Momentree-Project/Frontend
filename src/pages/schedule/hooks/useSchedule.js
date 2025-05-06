@@ -1,5 +1,5 @@
-import { useState } from "react";
-import axios from "axios";
+import { useState, useEffect } from "react";
+import api from '../../../api/axiosInstance';
 
 // 날짜 포맷팅 유틸 함수
 function formatDate(dateObj) {
@@ -14,31 +14,65 @@ function formatDate(dateObj) {
     return `${year}-${month}-${day}`;
 }
 
-
 // 스케줄 관련 로직을 담당하는 커스텀 훅
 export function useSchedule() {
-    // 실제로는 API에서 데이터를 가져올 것입니다
-    const mockSchedules = [
-        { date: "2025-04-20", title: "하루종일 누워 있기", weather: "구름 조금" },
-        { date: "2025-04-24", title: "파스타 만들기", weather: "맑음" },
-        { date: "2025-05-04", title: "무슨무슨 기념일", weather: "맑음" },
-    ];
-
+    const [schedules, setSchedules] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
     const [selectedDate, setSelectedDate] = useState(new Date("2025-04-24"));
     const selectedDateStr = formatDate(selectedDate);
 
+    // API에서 일정 데이터 가져오기
+    const fetchSchedules = async () => {
+        setLoading(true);
+        try {
+            const response = await api.get('/api/v1/schedules');
+            setSchedules(response.data.data || []);
+            setError(null);
+        } catch (error) {
+            console.error('일정 조회 실패:', error);
+            setError('일정을 불러오는데 실패했습니다.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // 일정 추가 함수
+    const addSchedule = async (scheduleData) => {
+        try {
+            const response = await api.post('/api/v1/schedules', scheduleData);
+            if (response.status === 200) {
+                // 일정 추가 성공 후 목록 새로고침
+                await fetchSchedules();
+                return true;
+            }
+            return false;
+        } catch (error) {
+            console.error('일정 추가 실패:', error);
+            return false;
+        }
+    };
+
+    // 컴포넌트 마운트 시 작업
+    useEffect(() => {
+        fetchSchedules();
+    }, []);
+
     // 선택된 날짜의 일정
-    const todaySchedule = mockSchedules.find((s) => s.date === selectedDateStr);
+    const todaySchedule = schedules.find((s) => formatDate(new Date(s.startTime)) === selectedDateStr);
 
     // 선택된 날짜의 일정 목록
-    const scheduleList = mockSchedules.filter((s) => s.date === selectedDateStr);
+    const scheduleList = schedules.filter((s) => formatDate(new Date(s.startTime)) === selectedDateStr);
 
     // 날짜에 일정이 있는지 확인하는 함수
     const hasScheduleOnDate = (date) => {
-        return mockSchedules.some((s) => s.date === formatDate(date));
+        return schedules.some((s) => formatDate(new Date(s.startTime)) === formatDate(date));
     };
 
     return {
+        schedules,
+        loading,
+        error,
         selectedDate,
         setSelectedDate,
         selectedDateStr,
@@ -46,5 +80,7 @@ export function useSchedule() {
         scheduleList,
         hasScheduleOnDate,
         formatDate,
+        fetchSchedules,
+        addSchedule,
     };
 }
