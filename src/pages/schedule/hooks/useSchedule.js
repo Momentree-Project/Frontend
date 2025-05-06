@@ -22,24 +22,41 @@ export function useSchedule() {
     const [selectedDate, setSelectedDate] = useState(new Date("2025-04-24"));
     const selectedDateStr = formatDate(selectedDate);
 
-    // API에서 일정 데이터 가져오기 - 훅 내부로 이동
-    useEffect(() => {
-        const fetchSchedules = async () => {
-            setLoading(true);
-            try {
-                const response = await api.get('/api/v1/schedules');
-                setSchedules(response.data.data || []);
-                setError(null);
-            } catch (error) {
-                console.error('일정 조회 실패:', error);
-                setError('일정을 불러오는데 실패했습니다.');
-            } finally {
-                setLoading(false);
-            }
-        };
+    // API에서 일정 데이터 가져오기
+    const fetchSchedules = async () => {
+        setLoading(true);
+        try {
+            const response = await api.get('/api/v1/schedules');
+            setSchedules(response.data.data || []);
+            setError(null);
+        } catch (error) {
+            console.error('일정 조회 실패:', error);
+            setError('일정을 불러오는데 실패했습니다.');
+        } finally {
+            setLoading(false);
+        }
+    };
 
+    // 일정 추가 함수
+    const addSchedule = async (scheduleData) => {
+        try {
+            const response = await api.post('/api/v1/schedules', scheduleData);
+            if (response.status === 200) {
+                // 일정 추가 성공 후 목록 새로고침
+                await fetchSchedules();
+                return true;
+            }
+            return false;
+        } catch (error) {
+            console.error('일정 추가 실패:', error);
+            return false;
+        }
+    };
+
+    // 컴포넌트 마운트 시 작업
+    useEffect(() => {
         fetchSchedules();
-    }, []); // 컴포넌트 마운트 시 한 번만 실행
+    }, []);
 
     // 선택된 날짜의 일정
     const todaySchedule = schedules.find((s) => formatDate(new Date(s.startTime)) === selectedDateStr);
@@ -63,5 +80,7 @@ export function useSchedule() {
         scheduleList,
         hasScheduleOnDate,
         formatDate,
+        fetchSchedules,
+        addSchedule,
     };
 }
