@@ -9,6 +9,7 @@ function CoupleConnect() {
   const [coupleStartedDay, setcoupleStartedDay] = useState("");
   const [myCode, setMyCode] = useState("");
   const [error, setError] = useState("");
+  const [maxDate, setMaxDate] = useState("");
 
   useEffect(() => {
     // 로컬 스토리지에서 loginUserInfo 가져오기
@@ -24,6 +25,15 @@ function CoupleConnect() {
         console.error("로컬 스토리지 데이터 파싱 오류:", error);
       }
     }
+
+    // 오늘 날짜를 yyyy-mm-dd 형식으로 구하기
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const day = String(today.getDate()).padStart(2, "0");
+    const formattedToday = `${year}-${month}-${day}`;
+
+    setMaxDate(formattedToday);
   }, [location.state]);
 
   const handleConnect = async (e) => {
@@ -107,8 +117,12 @@ function CoupleConnect() {
               type="date"
               value={coupleStartedDay}
               onChange={(e) => setcoupleStartedDay(e.target.value)}
+              max={maxDate} // 오늘 날짜 이전까지만 선택 가능
               className="w-full p-3 rounded-lg border border-subpoint focus:outline-none focus:ring-1 focus:ring-point"
             />
+            <p className="text-xs text-textsub mt-1">
+              오늘 이전 날짜만 선택 가능합니다.
+            </p>
           </div>
 
           {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
