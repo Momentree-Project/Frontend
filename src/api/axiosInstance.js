@@ -49,25 +49,36 @@ api.interceptors.response.use(
                 const newAccessToken = response.data.data.accessToken;
                 localStorage.setItem('accessToken', newAccessToken);
 
+                // 날짜와 시간을 직접 포맷팅하는 함수
+                const formatDateTime = (date) => {
+                    const year = date.getFullYear();
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const day = String(date.getDate()).padStart(2, '0');
+                    const hours = String(date.getHours()).padStart(2, '0');
+                    const minutes = String(date.getMinutes()).padStart(2, '0');
+                    const seconds = String(date.getSeconds()).padStart(2, '0');
+
+                    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+                };
+
                 // 원래 요청에 data가 있었다면 그대로 유지
                 if (originalRequest.data && typeof originalRequest.data === 'string') {
                     const parsedData = JSON.parse(originalRequest.data);
 
-                    // 날짜 필드가 있는 경우 시간을 정오로 설정
+                    // 날짜 필드가 있는 경우 직접 포맷팅
                     if (parsedData.startTime) {
                         const startDate = new Date(parsedData.startTime);
-                        startDate.setHours(12, 0, 0, 0);
-                        parsedData.startTime = startDate.toISOString();
+                        parsedData.startTime = formatDateTime(startDate);
                     }
 
                     if (parsedData.endTime) {
                         const endDate = new Date(parsedData.endTime);
-                        endDate.setHours(12, 0, 0, 0);
-                        parsedData.endTime = endDate.toISOString();
+                        parsedData.endTime = formatDateTime(endDate);
                     }
 
                     originalRequest.data = parsedData;
                 }
+
 
                 // 대기 중인 요청 처리
                 refreshQueue.forEach(({ resolve, originalRequest }) => {
