@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
+import api from '../../../api/axiosInstance';
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
 export function ScheduleModal({ isOpen, onClose, selectedDate, onSave }) {
     const [formData, setFormData] = useState({
-        coupleId: 1, // 기본값 또는 props로 받을 수 있음, 추후 수정 필요
+        coupleId: localStorage.getItem("coupleId"),
         categoryId: 4, // 기본값
         title: "",
         content: "",
@@ -74,17 +74,13 @@ export function ScheduleModal({ isOpen, onClose, selectedDate, onSave }) {
         };
 
         try {
-            const response = await axios.post('http://localhost:8080/api/v1/schedules', scheduleData, {
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
+            // api 인스턴스 사용 (토큰은 인터셉터에서 자동으로 추가됨)
+            const response = await api.post('/api/v1/schedules', scheduleData);
 
             if (response.status === 200) {
                 onSave(scheduleData);
                 onClose();
             }
-
         } catch (error) {
             console.error('일정 추가 실패:', error);
         }
