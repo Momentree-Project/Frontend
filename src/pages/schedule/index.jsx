@@ -4,6 +4,8 @@ import { ScheduleHeader } from "./components/ScheduleHeader";
 import { ScheduleCalendar } from "./components/ScheduleCalendar";
 import { ScheduleList } from "./components/ScheduleList";
 import { ScheduleModal } from "./components/ScheduleModal";
+import { ScheduleDetailModal } from "./components/ScheduleDetailModal";
+import { ScheduleEditModal } from "./components/ScheduleEditModal";
 import "./style.css";
 
 function Schedule() {
@@ -11,16 +13,21 @@ function Schedule() {
         selectedDate,
         setSelectedDate,
         selectedDateStr,
-        todaySchedule,
         scheduleList,
         hasScheduleOnDate,
         formatDate,
         loading,
         error,
         fetchSchedules,
+        getScheduleDetail,
+        updateSchedule,
+        deleteSchedule,
     } = useSchedule();
 
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [selectedSchedule, setSelectedSchedule] = useState(null);
 
     const handleAddClick = () => {
         setIsModalOpen(true);
@@ -29,6 +36,49 @@ function Schedule() {
     const handleCloseModal = () => {
         fetchSchedules();  // 모달이 닫힐 때 일정 목록 새로고침
         setIsModalOpen(false);
+    };
+
+    const handleItemClick = async (scheduleId) => {
+        const scheduleDetail = await getScheduleDetail(scheduleId);
+        if (scheduleDetail) {
+            setSelectedSchedule(scheduleDetail);
+            setIsDetailModalOpen(true);
+        }
+    };
+
+    const handleEditClick = async (scheduleId) => {
+        // 리스트에서 직접 수정 버튼 클릭 시
+        const scheduleDetail = await getScheduleDetail(scheduleId);
+        if (scheduleDetail) {
+            setSelectedSchedule(scheduleDetail);
+            setIsEditModalOpen(true);
+        }
+    };
+
+    const handleDeleteClick = async (scheduleId) => {
+        // 삭제 확인 다이얼로그
+        if (window.confirm('정말로 이 일정을 삭제하시겠습니까?')) {
+            const success = await deleteSchedule(scheduleId);
+            if (success) {
+                // 삭제 성공 시 모달 닫기
+                setIsDetailModalOpen(false);
+                // 일정 삭제 이벤트 발생
+                window.dispatchEvent(new Event('scheduleDeleted'));
+            } else {
+                alert('일정 삭제에 실패했습니다.');
+            }
+        }
+    };
+
+    const handleEditFromDetail = (scheduleId) => {
+        // 상세 모달에서 수정 버튼 클릭 시
+        setIsDetailModalOpen(false);
+        setIsEditModalOpen(true);
+    };
+
+    const handleCloseEditModal = () => {
+        fetchSchedules();  // 수정 모달이 닫힐 때 일정 목록 새로고침
+        setIsEditModalOpen(false);
     };
 
     // 로딩 상태 처리
@@ -41,7 +91,7 @@ function Schedule() {
                 {/* 상단 카드 */}
                 <ScheduleHeader
                     selectedDateStr={selectedDateStr}
-                    todaySchedule={todaySchedule}
+                    scheduleList={scheduleList}
                 />
 
                 {/* 캘린더 카드 */}
@@ -67,13 +117,33 @@ function Schedule() {
                     {/* 일정 리스트 */}
                     <ScheduleList
                         scheduleList={scheduleList}
-                        onAddClick={handleAddClick}
+                        onItemClick={handleItemClick}
+                        onEditClick={handleEditClick}
+                        onDeleteClick={handleDeleteClick}
                     />
                 </section>
 
+                {/* 일정 추가 모달 */}
                 <ScheduleModal
                     isOpen={isModalOpen}
                     onClose={handleCloseModal}
+                    selectedDate={selectedDate}
+                />
+
+                {/* 일정 상세 모달 */}
+                <ScheduleDetailModal
+                    isOpen={isDetailModalOpen}
+                    onClose={() => setIsDetailModalOpen(false)}
+                    schedule={selectedSchedule}
+                    onEdit={handleEditFromDetail}
+                    onDelete={handleDeleteClick}
+                />
+
+                {/* 일정 수정 모달 */}
+                <ScheduleEditModal
+                    isOpen={isEditModalOpen}
+                    onClose={handleCloseEditModal}
+                    schedule={selectedSchedule}
                     selectedDate={selectedDate}
                 />
             </div>

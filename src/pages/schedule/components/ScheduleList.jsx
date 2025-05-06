@@ -1,4 +1,4 @@
-export function ScheduleList({ scheduleList }) {
+export function ScheduleList({ scheduleList, onAddClick, onItemClick, onEditClick, onDeleteClick }) {
     return (
         <>
             <div className="flex justify-between items-center mb-3">
@@ -8,10 +8,31 @@ export function ScheduleList({ scheduleList }) {
                 {scheduleList.map((item, idx) => (
                     <li
                         key={idx}
-                        className="bg-white rounded-[10px] px-[14px] py-[12px] mb-[8px] flex justify-between items-center text-point text-[16px] font-medium shadow-[0_1px_4px_#eaece3]"
+                        onClick={() => onItemClick(item.id)}
+                        className="bg-white rounded-[10px] px-[14px] py-[12px] mb-[8px] flex justify-between items-center text-point text-[16px] font-medium shadow-[0_1px_4px_#eaece3] cursor-pointer"
                     >
                         <span>{item.title}</span>
-                        <span className="text-subpoint text-[15px]">{item.weather}</span>
+                        <div className="flex items-center gap-2">
+                            <span className="text-subpoint text-[15px]">{item.weather}</span>
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();  // 이벤트 버블링 방지
+                                    onEditClick(item.id);
+                                }}
+                                className="text-blue-500 text-[14px]"
+                            >
+                                수정
+                            </button>
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();  // 이벤트 버블링 방지
+                                    onDeleteClick(item.id);
+                                }}
+                                className="text-red-500 text-[14px]"
+                            >
+                                삭제
+                            </button>
+                        </div>
                     </li>
                 ))}
                 {scheduleList.length === 0 && (
