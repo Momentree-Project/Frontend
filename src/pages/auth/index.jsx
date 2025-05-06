@@ -1,7 +1,5 @@
 import React from "react";
-import "./style.css";
 
-// 소셜 로그인 버튼 컴포넌트
 function SocialLoginButton({ provider }) {
   const providerNames = {
     google: "Google로 로그인",
@@ -9,12 +7,21 @@ function SocialLoginButton({ provider }) {
     kakao: "Kakao로 로그인",
   };
 
+  const providerStyles = {
+    google: "bg-white text-textmain border border-point",
+    naver: "bg-[#03c75a] text-white",
+    kakao: "bg-[#fee500] text-[#3c1e1e]",
+  };
+
   const handleLogin = () => {
     window.location.href = `http://localhost:8080/oauth2/authorization/${provider}`;
   };
 
   return (
-    <button className={`social-btn ${provider}`} onClick={handleLogin}>
+    <button
+      onClick={handleLogin}
+      className={`w-full py-3 rounded-lg text-[1.1rem] font-semibold cursor-pointer transition-colors duration-200 ${providerStyles[provider]}`}
+    >
       {providerNames[provider]}
     </button>
   );
@@ -22,11 +29,11 @@ function SocialLoginButton({ provider }) {
 
 function Login() {
   return (
-    <div className="main-bg">
-      <div className="card">
-        <h2 className="main-title">Momentree</h2>
-        <p className="subtitle">가득 데이트 마일돌 케어 서비스</p>
-        <div className="btn-group">
+    <div className="min-h-screen flex flex-col gap-8 items-center justify-center bg-mainbg text-textmain font-noto">
+      <div className="bg-cardbg rounded-[18px] shadow-md p-9 min-w-[320px] flex flex-col items-center">
+        <h2 className="text-2xl font-bold mb-2 text-textmain">Momentree</h2>
+        <p className="text-base text-textsub mb-6"></p>
+        <div className="flex flex-col gap-3 w-full">
           <SocialLoginButton provider="google" />
           <SocialLoginButton provider="naver" />
           <SocialLoginButton provider="kakao" />
