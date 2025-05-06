@@ -16,7 +16,8 @@ function Schedule() {
         hasScheduleOnDate,
         formatDate,
         loading,
-        error
+        error,
+        fetchSchedules,
     } = useSchedule();
 
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -26,6 +27,7 @@ function Schedule() {
     };
 
     const handleCloseModal = () => {
+        fetchSchedules();  // 모달이 닫힐 때 일정 목록 새로고침
         setIsModalOpen(false);
     };
 
