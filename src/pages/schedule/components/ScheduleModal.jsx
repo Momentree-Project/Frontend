@@ -7,15 +7,24 @@ export function ScheduleModal({ isOpen, onClose, selectedDate }) {
     // useSchedule 훅에서 addSchedule 함수 가져오기
     const { addSchedule } = useSchedule();
 
-    const [formData, setFormData] = useState({
-        coupleId: localStorage.getItem("coupleId"),
-        categoryId: 4, // 기본값
-        title: "",
-        content: "",
-        startTime: selectedDate ? new Date(selectedDate) : new Date(),
-        endTime: selectedDate ? new Date(selectedDate.setHours(selectedDate.getHours() + 1)) : new Date(new Date().setHours(new Date().getHours() + 1)),
-        isAllDay: false,
-        location: ""
+    const [formData, setFormData] = useState(() => {
+        const startTime = selectedDate ? new Date(selectedDate.getTime()) : new Date();
+        const endTime = selectedDate ? new Date(selectedDate.getTime()) : new Date();
+
+        if (endTime) {
+            endTime.setHours(endTime.getHours() + 1);
+        }
+
+        return {
+            coupleId: localStorage.getItem("coupleId"),
+            categoryId: 4,
+            title: "",
+            content: "",
+            startTime,
+            endTime,
+            isAllDay: false,
+            location: ""
+        };
     });
 
     // 카테고리 기능 개발되면 수정 필요함, 목록 조회 및 추가 기능 구현
