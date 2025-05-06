@@ -32,9 +32,7 @@ function Login() {
     <div className="min-h-screen flex flex-col gap-8 items-center justify-center bg-mainbg text-textmain font-noto">
       <div className="bg-cardbg rounded-[18px] shadow-md p-9 min-w-[320px] flex flex-col items-center">
         <h2 className="text-2xl font-bold mb-2 text-textmain">Momentree</h2>
-        <p className="text-base text-textsub mb-6">
-          가득 데이트 마일돌 케어 서비스
-        </p>
+        <p className="text-base text-textsub mb-6"></p>
         <div className="flex flex-col gap-3 w-full">
           <SocialLoginButton provider="google" />
           <SocialLoginButton provider="naver" />
