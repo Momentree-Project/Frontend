@@ -43,8 +43,6 @@ export function useSchedule() {
         try {
             const response = await api.post('/api/v1/schedules', scheduleData);
             if (response.status === 200) {
-                // 새로고침 트리거 증가 (axios 인터셉터 때문에 필요)
-                setRefreshTrigger(prev => prev + 1);
                 return true;
             }
             return false;
