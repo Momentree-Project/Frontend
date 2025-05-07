@@ -147,8 +147,8 @@ function AdditionalInfo() {
       };
 
       // API 요청 보내기
-      const response = await axios.post(
-        "http://localhost:8080/api/v1/user/additional-info",
+      const response = await axios.patch(
+        "http://localhost:8080/api/v1/users/me/additional-info",
         dataToSend
       );
 
