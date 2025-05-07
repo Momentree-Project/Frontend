@@ -62,7 +62,7 @@ function CoupleConnect() {
       };
       // API 요청 보내기
       const response = await axios.post(
-        "http://localhost:8080/api/v1/couple/connect",
+        "http://localhost:8080/api/v1/couples",
         {
           userCode: userCode,
           coupleStartedDay: coupleStartedDay,
