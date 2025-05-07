@@ -14,7 +14,9 @@ function SocialLoginButton({ provider }) {
   };
 
   const handleLogin = () => {
-    window.location.href = `http://localhost:8080/oauth2/authorization/${provider}`;
+    window.location.href = `${
+      import.meta.env.VITE_CORE_API_BASE_URL
+    }/oauth2/authorization/${provider}`;
   };
 
   return (

@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../../api/axiosInstance"; // axiosInstance.js 경로에 맞게 수정
 
 const OAuth2RedirectHandler = () => {
   const navigate = useNavigate();
@@ -9,10 +9,9 @@ const OAuth2RedirectHandler = () => {
     const fetchUserInfo = async () => {
       try {
         console.log("get요청");
-        const response = await axios.get(
-          `http://localhost:8080/api/v1/auth/refresh-token`,
-          { withCredentials: true }
-        );
+        const response = await api.get(`/api/v1/auth/refresh-token`, {
+          withCredentials: true,
+        });
         console.log("전체 응답", response);
         if (response.data.data) {
           const loginUserInfo = {
@@ -28,15 +27,6 @@ const OAuth2RedirectHandler = () => {
 
           localStorage.setItem("loginUserInfo", JSON.stringify(loginUserInfo));
           localStorage.setItem("accessToken", accessToken);
-
-          // accessToken을 axios 기본 헤더에 저장
-          axios.defaults.headers.common[
-            "Authorization"
-          ] = `Bearer ${accessToken}`;
-          console.log(
-            "설정된 헤더",
-            axios.defaults.headers.common["Authorization"]
-          );
 
           // coupleId와 birth 유무에 따라 다른 페이지로 리다이렉트
           if (!loginUserInfo.birth) {

@@ -1,7 +1,7 @@
 // src/pages/authAdditionalInfo/index.jsx
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../../api/axiosInstance";
 
 function AdditionalInfo() {
   const navigate = useNavigate();
@@ -88,9 +88,6 @@ function AdditionalInfo() {
     if (name === "privacyConsent") {
       // privacy 동의는 별도 상태로 관리하고
       setPrivacyConsent(checked);
-      // if (checked) {
-      //   setPrivacyError("");
-      // }
     } else {
       // 다른 입력 필드 처리
       setFormData({
@@ -125,21 +122,6 @@ function AdditionalInfo() {
     setError("");
 
     try {
-      // 로컬 스토리지에서 액세스 토큰 가져오기
-      const accessToken = localStorage.getItem("accessToken");
-
-      if (!accessToken) {
-        setError("로그인이 필요합니다.");
-        navigate("/", { replace: true });
-        return;
-      }
-
-      // 요청 헤더에 토큰 포함
-      const config = {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      };
       // 서버로 전송하기 전에 명시적으로 불리언 타입으로 변환
       const dataToSend = {
         ...formData,
@@ -147,8 +129,8 @@ function AdditionalInfo() {
       };
 
       // API 요청 보내기
-      const response = await axios.patch(
-        "http://localhost:8080/api/v1/users/me/additional-info",
+      const response = await api.patch(
+        "/api/v1/users/me/additional-info",
         dataToSend
       );
 

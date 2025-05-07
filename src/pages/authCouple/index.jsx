@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../../api/axiosInstance";
 
 function CoupleConnect() {
   const location = useLocation();
@@ -45,30 +45,11 @@ function CoupleConnect() {
     }
 
     try {
-      // 로컬 스토리지에서 액세스 토큰 가져오기
-      const accessToken = localStorage.getItem("accessToken");
-
-      if (!accessToken) {
-        setError("로그인이 필요합니다.");
-        navigate("/", { replace: true });
-        return;
-      }
-
-      // 요청 헤더에 토큰 포함
-      const config = {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      };
       // API 요청 보내기
-      const response = await axios.post(
-        "http://localhost:8080/api/v1/couples",
-        {
-          userCode: userCode,
-          coupleStartedDay: coupleStartedDay,
-        },
-        config
-      );
+      const response = await api.post("/api/v1/couples", {
+        userCode: userCode,
+        coupleStartedDay: coupleStartedDay,
+      });
 
       console.log("커플 연결 응답:", response.data);
 
