@@ -219,7 +219,7 @@ export function ScheduleEditModal({ isOpen, onClose, schedule, selectedDate }) {
                                     showTimeSelect
                                     timeIntervals={30}
                                     timeCaption="시간"
-                                    dateFormat="yyyy-MM-dd HH:mm"
+                                    dateFormat="yyyy년 MM월 dd일 HH:mm"
                                     dateFormatCalendar="yyyy년 MM월"
                                     className="w-full border border-gray-300 rounded-[8px] px-3 py-2"
                                     locale="ko"
@@ -234,7 +234,7 @@ export function ScheduleEditModal({ isOpen, onClose, schedule, selectedDate }) {
                                     showTimeSelect
                                     timeIntervals={30}
                                     timeCaption="시간"
-                                    dateFormat="yyyy-MM-dd HH:mm"
+                                    dateFormat="yyyy년 MM월 dd일 HH:mm"
                                     dateFormatCalendar="yyyy년 MM월"
                                     className="w-full border border-gray-300 rounded-[8px] px-3 py-2"
                                     minDate={startDate}

@@ -184,7 +184,7 @@ export function ScheduleModal({ isOpen, onClose, selectedDate }) {
                                 />
                             </div>
                         ) : (
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 gap-4">
                                 <div>
                                     <label className="block text-[14px] font-medium text-textmain mb-1">시작 시간</label>
                                     <DatePicker

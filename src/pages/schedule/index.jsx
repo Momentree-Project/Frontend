@@ -87,7 +87,8 @@ function Schedule() {
 
     return (
         <div className="bg-mainbg min-h-screen font-noto">
-            <div className="flex flex-col gap-[28px] max-w-[420px] mx-auto py-8">
+                <div className="flex flex-col gap-[16px] sm:gap-[28px] w-full max-w-[420px] mx-auto px-3 sm:px-4 py-4 sm:py-8">
+                    
                 {/* 상단 카드 */}
                 <ScheduleHeader
                     selectedDateStr={selectedDateStr}

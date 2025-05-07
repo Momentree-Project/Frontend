@@ -10,6 +10,19 @@ export function ScheduleHeader({ selectedDateStr, scheduleList }) {
         return minutes === 0 ? `${hours}시` : `${hours}:${minutes.toString().padStart(2, '0')}`;
     };
 
+    // 일정 유형에 따른 색상 지정 - 더 부드러운 파스텔 톤으로 변경
+    const getScheduleColor = (index) => {
+        // 부드러운 파스텔 톤 색상
+        const colors = [
+            '#9DC08B', // 부드러운 녹색
+            '#B1C9E8', // 연한 파랑
+            '#F8C4B4', // 연한 코랄
+            '#E5BEEC', // 연한 라벤더
+            '#FFD89C'  // 연한 노랑
+        ];
+        return colors[index % colors.length];
+    };
+
     return (
         <section className="bg-cardbg rounded-[22px] shadow-[0_2px_12px_#e2e5db] px-[20px] py-[24px] flex flex-col gap-[16px] mb-0">
             {/* 날짜 */}
@@ -27,32 +40,41 @@ export function ScheduleHeader({ selectedDateStr, scheduleList }) {
                     오늘의 일정
                 </div>
                 {scheduleList && scheduleList.length > 0 ? (
-                    <div className="divide-y divide-gray-50">
-                        {scheduleList.map((schedule) => (
+                    <div>
+                        {scheduleList.map((schedule, index) => (
                             <div
                                 key={schedule.id}
-                                className="flex items-center px-[16px] py-[12px] hover:bg-gray-50 transition-colors"
+                                className="px-[16px] py-[10px] hover:bg-gray-50 transition-colors border-l-[3px]"
+                                style={{ borderLeftColor: getScheduleColor(index) }}
                             >
-                                <div className="flex flex-col">
+                                <div className="flex items-center justify-between">
                                     <span className="text-[15px] font-medium text-textmain">{schedule.title}</span>
-                                    {schedule.location && (
-                                        <span className="text-[13px] text-subpoint mt-1">📍 {schedule.location}</span>
-                                    )}
+                                    <span className="text-[18px]">
+                                        {schedule.weather === "맑음" ? "☀️" :
+                                            schedule.weather === "흐림" ? "🌤️" :
+                                                schedule.weather === "비" ? "🌧️" : ""}
+                                    </span>
+                                </div>
+
+                                <div className="flex flex-wrap items-center gap-2 mt-1">
                                     {/* 시간 표시 */}
                                     {schedule.isAllDay ? (
-                                        <span className="text-[13px] text-point mt-1 bg-[#F5F8F3] px-2 py-0.5 rounded-full inline-block">종일</span>
+                                        <span className="text-[12px] text-point bg-[#F5F8F3] px-2 py-0.5 rounded-full inline-block">종일</span>
                                     ) : (
-                                        <span className="text-[13px] text-subpoint mt-1 flex items-center">
+                                        <span className="text-[12px] text-subpoint flex items-center">
                                             <span className="text-[11px] mr-1">🕒</span>
                                             {formatTime(schedule.startTime)} ~ {formatTime(schedule.endTime)}
                                         </span>
                                     )}
+
+                                    {/* 위치 정보 */}
+                                    {schedule.location && (
+                                        <span className="text-[12px] text-subpoint flex items-center">
+                                            <span className="text-[11px] mr-1">📍</span>
+                                            {schedule.location}
+                                        </span>
+                                    )}
                                 </div>
-                                <span className="ml-auto text-[18px]">
-                                    {schedule.weather === "맑음" ? "☀️" :
-                                        schedule.weather === "흐림" ? "🌤️" :
-                                            schedule.weather === "비" ? "🌧️" : ""}
-                                </span>
                             </div>
                         ))}
                     </div>
