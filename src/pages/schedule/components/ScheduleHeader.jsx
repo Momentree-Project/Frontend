@@ -1,4 +1,3 @@
-// ScheduleHeader.jsx
 export function ScheduleHeader({ selectedDateStr, scheduleList }) {
     // 시간 포맷팅 함수
     const formatTime = (dateString) => {
