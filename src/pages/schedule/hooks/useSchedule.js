@@ -119,15 +119,54 @@ export function useSchedule() {
         };
     }, []);
 
-    // 선택된 날짜의 일정
-    const todaySchedule = schedules.find((s) => formatDate(new Date(s.startTime)) === selectedDateStr);
+    // 선택한 날짜가 일정 기간에 포함되는지 확인하는 함수
+    const isDateInScheduleRange = (date, schedule) => {
+        if (!schedule.endTime) {
+            return formatDate(new Date(schedule.startTime)) === formatDate(date);
+        }
 
-    // 선택된 날짜의 일정 목록
-    const scheduleList = schedules.filter((s) => formatDate(new Date(s.startTime)) === selectedDateStr);
+        const checkDate = new Date(date);
+        checkDate.setHours(0, 0, 0, 0);
+
+        const startDate = new Date(schedule.startTime);
+        startDate.setHours(0, 0, 0, 0);
+
+        const endDate = new Date(schedule.endTime);
+        endDate.setHours(0, 0, 0, 0);
+
+        return checkDate >= startDate && checkDate <= endDate;
+    };
+
+    // 선택된 날짜의 일정 (여러 날짜에 걸친 일정 포함)
+    const todaySchedule = schedules.find(schedule => 
+        isDateInScheduleRange(selectedDate, schedule)
+    );
+
+    // 선택된 날짜의 일정 목록 (여러 날짜에 걸친 일정 포함)
+    const scheduleList = schedules.filter(schedule => 
+        isDateInScheduleRange(selectedDate, schedule)
+    );
 
     // 날짜에 일정이 있는지 확인하는 함수
     const hasScheduleOnDate = (date) => {
-        return schedules.some((s) => formatDate(new Date(s.startTime)) === formatDate(date));
+        const dateStr = formatDate(date);
+        const result = {
+            hasSingleDay: false,
+            multiDaySchedules: []
+        };
+
+        for (const schedule of schedules) {
+            if (isDateInScheduleRange(date, schedule)) {
+                // 하루짜리 일정인지 또는 여러 날에 걸친 일정인지 확인
+                if (!schedule.endTime || formatDate(new Date(schedule.startTime)) === formatDate(new Date(schedule.endTime))) {
+                    result.hasSingleDay = true;
+                } else {
+                    result.multiDaySchedules.push(schedule.id);
+                }
+            }
+        }
+
+        return result;
     };
 
     return {
