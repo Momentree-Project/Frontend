@@ -1,4 +1,8 @@
+import { useSchedule } from "../hooks/useSchedule";
+
 export function ScheduleHeader({ selectedDateStr, scheduleList, onScheduleClick }) {
+    const { getCategoryById, getCategoryColorHex } = useSchedule();
+    
     // 날짜 포맷팅 함수 추가
     const formatDate = (dateString) => {
         const date = new Date(dateString);
@@ -17,81 +21,77 @@ export function ScheduleHeader({ selectedDateStr, scheduleList, onScheduleClick 
         return minutes === 0 ? `${hours}시` : `${hours}:${minutes.toString().padStart(2, '0')}`;
     };
 
-    // 일정 시간 범위 표시 함수 - 여러 날짜에 걸친 일정과 하루짜리 일정 처리
+    // 일정 시간 범위 표시 함수 - 통일된 형식으로 변경
     const formatTimeRange = (schedule) => {
         if (schedule.isAllDay) {
             return <span className="text-[12px] text-point bg-[#F5F8F3] px-2 py-0.5 rounded-full inline-block">종일</span>;
         }
 
-        const startDate = new Date(schedule.startTime);
-        const endDate = new Date(schedule.endTime);
-        const selectedDate = new Date(selectedDateStr);
+        // 시작 날짜와 시간
+        const startDateStr = formatDate(schedule.startTime);
+        const startTimeStr = formatTime(schedule.startTime);
         
-        // 시작일과 종료일이 같은지 확인 (하루짜리 일정)
-        const isSameDay = startDate.getFullYear() === endDate.getFullYear() && 
-                          startDate.getMonth() === endDate.getMonth() && 
-                          startDate.getDate() === endDate.getDate();
-
-        if (isSameDay) {
-            // 하루짜리 일정
-            return (
-                <span className="text-[12px] text-subpoint flex items-center">
-                    <span className="text-[11px] mr-1">🕒</span>
-                    {formatTime(schedule.startTime)} ~ {formatTime(schedule.endTime)}
-                </span>
-            );
-        } else {
-            // 여러 날짜에 걸친 일정
-            const selectedDateOnly = new Date(selectedDate);
-            selectedDateOnly.setHours(0, 0, 0, 0);
-            
-            const startDateOnly = new Date(startDate);
-            startDateOnly.setHours(0, 0, 0, 0);
-            
-            const endDateOnly = new Date(endDate);
-            endDateOnly.setHours(0, 0, 0, 0);
-            
-            // 선택된 날짜가 시작일인 경우
-            if (selectedDateOnly.getTime() === startDateOnly.getTime()) {
-                return (
-                    <span className="text-[12px] text-subpoint flex items-center">
-                        <span className="text-[11px] mr-1">🕒</span>
-                        {formatTime(schedule.startTime)} ~ {formatDate(schedule.endTime)} {formatTime(schedule.endTime)}
-                    </span>
-                );
-            } 
-            // 선택된 날짜가 종료일인 경우
-            else if (selectedDateOnly.getTime() === endDateOnly.getTime()) {
-                return (
-                    <span className="text-[12px] text-subpoint flex items-center">
-                        <span className="text-[11px] mr-1">🕒</span>
-                        {formatDate(schedule.startTime)} {formatTime(schedule.startTime)} ~ {formatTime(schedule.endTime)}
-                    </span>
-                );
-            } 
-            // 선택된 날짜가 중간에 있는 경우
-            else {
-                return (
-                    <span className="text-[12px] text-subpoint flex items-center">
-                        <span className="text-[11px] mr-1">🕒</span>
-                        {formatDate(schedule.startTime)} {formatTime(schedule.startTime)} ~ {formatDate(schedule.endTime)} {formatTime(schedule.endTime)}
-                    </span>
-                );
-            }
-        }
+        // 종료 날짜와 시간
+        const endDateStr = formatDate(schedule.endTime);
+        const endTimeStr = formatTime(schedule.endTime);
+        
+        // 날짜와 시간을 통일된 형식으로 반환
+        return (
+            <span className="text-[12px] text-subpoint flex items-center">
+                <span className="text-[11px] mr-1">🕒</span>
+                {startDateStr} {startTimeStr} ~ {endDateStr} {endTimeStr}
+            </span>
+        );
     };
 
     // 일정 유형에 따른 색상 지정 - 더 부드러운 파스텔 톤으로 변경
-    const getScheduleColor = (index) => {
-        // 부드러운 파스텔 톤 색상
-        const colors = [
+    const getScheduleColor = (schedule) => {
+        // 카테고리가 있으면 해당 카테고리 색상 사용
+        if (schedule.categoryId) {
+            const category = getCategoryById(schedule.categoryId);
+            if (category) {
+                return getCategoryColorHex(category.color);
+            }
+        }
+        
+        // 카테고리가 없으면 기본 색상 사용
+        const defaultColors = [
             '#9DC08B', // 부드러운 녹색
             '#B1C9E8', // 연한 파랑
             '#F8C4B4', // 연한 코랄
             '#E5BEEC', // 연한 라벤더
             '#FFD89C'  // 연한 노랑
         ];
-        return colors[index % colors.length];
+        return defaultColors[schedule.id % defaultColors.length];
+    };
+
+    // 카테고리 정보 표시 함수
+    const renderCategoryBadge = (schedule) => {
+        if (!schedule.categoryId) return null;
+        
+        const category = getCategoryById(schedule.categoryId);
+        if (!category) return null;
+        
+        const hexColor = getCategoryColorHex(category.color);
+        // 배경색은 원래 색상에 투명도 35%로 설정하여 적당히 강조
+        const bgColor = hexColor + "35";
+        
+        return (
+            <span 
+                className="text-[11px] font-medium px-2 py-[2px] rounded-full inline-flex items-center"
+                style={{ 
+                    backgroundColor: bgColor,
+                    color: hexColor,
+                    boxShadow: `0 0 0 1px ${hexColor}60`
+                }}
+            >
+                <span 
+                    className="w-1.5 h-1.5 rounded-full mr-1 flex-shrink-0" 
+                    style={{ backgroundColor: hexColor }}
+                ></span>
+                <span className="truncate max-w-[60px]">{category.name}</span>
+            </span>
+        );
     };
 
     return (
@@ -115,20 +115,33 @@ export function ScheduleHeader({ selectedDateStr, scheduleList, onScheduleClick 
                         {scheduleList.map((schedule, index) => (
                             <div
                                 key={schedule.id}
-                                className="px-[16px] py-[10px] hover:bg-gray-50 transition-colors border-l-[3px] cursor-pointer"
-                                style={{ borderLeftColor: getScheduleColor(index) }}
+                                className="px-[16px] py-[12px] hover:bg-gray-50 transition-colors border-l-[4px] cursor-pointer flex flex-col"
+                                style={{ 
+                                    borderLeftColor: getScheduleColor(schedule),
+                                    backgroundColor: `${getScheduleColor(schedule)}08` // 매우 연한 배경색 추가
+                                }}
                                 onClick={() => onScheduleClick && onScheduleClick(schedule.id)}
                             >
-                                <div className="flex items-center justify-between">
-                                    <span className="text-[15px] font-medium text-textmain">{schedule.title}</span>
-                                    <span className="text-[18px]">
-                                        {schedule.weather === "맑음" ? "☀️" :
-                                            schedule.weather === "흐림" ? "🌤️" :
-                                                schedule.weather === "비" ? "🌧️" : ""}
-                                    </span>
+                                <div className="flex items-center justify-between mb-1.5">
+                                    <div className="flex items-center">
+                                        <span className="text-[15px] font-medium text-textmain">{schedule.title}</span>
+                                    </div>
+                                    <div className="flex items-center gap-1.5">
+                                        {/* 카테고리 정보 */}
+                                        {renderCategoryBadge(schedule)}
+                                        
+                                        {/* 날씨 아이콘 */}
+                                        {schedule.weather && (
+                                            <span className="text-[16px]">
+                                                {schedule.weather === "맑음" ? "☀️" :
+                                                    schedule.weather === "흐림" ? "🌤️" :
+                                                        schedule.weather === "비" ? "🌧️" : ""}
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
 
-                                <div className="flex flex-wrap items-center gap-2 mt-1">
+                                <div className="flex flex-wrap items-center gap-2">
                                     {/* 시간 표시 - 새로운 포맷팅 함수 사용 */}
                                     {formatTimeRange(schedule)}
 

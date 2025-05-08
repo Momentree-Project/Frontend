@@ -1,31 +1,21 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { useSchedule } from "../hooks/useSchedule";
 import { registerLocale } from "react-datepicker";
 import ko from 'date-fns/locale/ko';
-import api from '../../../api/axiosInstance';
 
 // 한국어 로케일 등록
 registerLocale('ko', ko);
 
-// CategoryColor enum에 맞는 색상 객체
-const categoryColorMap = {
-    RED: { colorName: "RED", hex: "#FF9494", displayName: "빨간색" },
-    ORANGE: { colorName: "ORANGE", hex: "#FFBD9B", displayName: "주황색" },
-    YELLOW: { colorName: "YELLOW", hex: "#FFD89C", displayName: "노란색" },
-    GREEN: { colorName: "GREEN", hex: "#9DC08B", displayName: "초록색" },
-    BLUE: { colorName: "BLUE", hex: "#7FBCD2", displayName: "파란색" },
-    INDIGO: { colorName: "INDIGO", hex: "#A0C4FF", displayName: "남색" },
-    VIOLET: { colorName: "VIOLET", hex: "#E5BEEC", displayName: "보라색" }
-};
-
-// 색상 배열
-const categoryColors = Object.values(categoryColorMap);
-
 export function ScheduleModal({ isOpen, onClose, selectedDate }) {
-    // useSchedule 훅에서 addSchedule 함수 가져오기
-    const { addSchedule } = useSchedule();
+    // useSchedule 훅에서 필요한 함수와 상태 가져오기
+    const { 
+        addSchedule, categories, fetchCategories, usedColors, 
+        isColorAvailable, findCategoryByColor, findFirstAvailableColor, 
+        getCategoryColorHex, addOrUpdateCategory, deleteCategory,
+        categoryColors, categoryColorMap, refreshCategories
+    } = useSchedule();
 
     const [formData, setFormData] = useState(() => {
         const startTime = selectedDate ? new Date(selectedDate.getTime()) : new Date();
@@ -46,12 +36,6 @@ export function ScheduleModal({ isOpen, onClose, selectedDate }) {
             location: ""
         };
     });
-
-    // 카테고리 관련 상태
-    const [categories, setCategories] = useState([]);
-    
-    // 이미 사용 중인 색상 추적
-    const [usedColors, setUsedColors] = useState([]);
     
     // 카테고리 추가 관련 상태
     const [showCategoryForm, setShowCategoryForm] = useState(false);
@@ -61,32 +45,11 @@ export function ScheduleModal({ isOpen, onClose, selectedDate }) {
         color: "" // 기본 색상 없음
     });
 
-    // 카테고리 목록 및 사용 중인 색상 가져오기
-    const fetchCategories = async () => {
-        try {
-            // API 요청으로 카테고리 목록 가져오기
-            const response = await api.get('/api/v1/categories');
-            if (response.status === 200) {
-                const categoryData = response.data.data || [];
-                setCategories(categoryData);
-                
-                // 사용 중인 색상 목록 업데이트
-                const colors = categoryData.map(cat => cat.color);
-                setUsedColors(colors);
-            }
-        } catch (error) {
-            console.error('카테고리 조회 실패:', error);
-            // 빈 배열로 초기화
-            setCategories([]);
-            setUsedColors([]);
-        }
-    };
-
     useEffect(() => {
         if (isOpen) {
-            fetchCategories(); // 모달이 열릴 때 카테고리 목록 가져오기
+            refreshCategories(); // 모달이 열릴 때 카테고리 목록 새로고침
         }
-    }, [isOpen]);
+    }, [isOpen, refreshCategories]);
 
     useEffect(() => {
         if (selectedDate) {
@@ -108,23 +71,47 @@ export function ScheduleModal({ isOpen, onClose, selectedDate }) {
         // 카테고리 추가 옵션 선택 시
         if (name === "categoryId" && value === "add_new") {
             // 최신 카테고리 목록 조회
-            fetchCategories().then(() => {
-                // 조회 완료 후 사용 가능한 색상 확인
-                const availableColor = findFirstAvailableColor();
-                if (!availableColor) {
-                    alert("모든 색상이 이미 사용 중입니다. 더 이상 카테고리를 추가할 수 없습니다.");
-                    return;
+            refreshCategories();
+            
+            // 카테고리 폼 초기화
+            let initialColor = "";
+            
+            // 사용 가능한 색상 확인
+            const availableColor = findFirstAvailableColor();
+            if (availableColor) {
+                initialColor = availableColor;
+            } else {
+                // 사용 가능한 색상이 없으면 첫 번째 카테고리의 색상을 선택 (수정 목적)
+                if (categories.length > 0) {
+                    initialColor = categories[0].color;
+                } else {
+                    // 카테고리가 없는 경우 첫 번째 색상 선택
+                    initialColor = Object.keys(categoryColorMap)[0];
                 }
-                
-                // 새 카테고리 폼을 표시하면서 기본값 설정
-                setNewCategory({
-                    name: "",
-                    color: availableColor // 사용 가능한 첫 번째 색상 설정
-                });
-                
-                setShowCategoryForm(true);
-                setIsCategoryAddMode(true);
+            }
+            
+            // 새 카테고리 폼을 표시하면서 기본값 설정
+            setNewCategory({
+                name: "",
+                color: initialColor
             });
+            
+            // 수정 모드인지 확인 (색상이 이미 사용 중인 경우)
+            const isEditMode = !isColorAvailable(initialColor);
+            if (isEditMode && initialColor) {
+                const existingCategory = findCategoryByColor(initialColor);
+                if (existingCategory) {
+                    setNewCategory({
+                        name: existingCategory.name,
+                        color: initialColor
+                    });
+                }
+                setIsCategoryAddMode(false); // 수정 모드로 설정
+            } else {
+                setIsCategoryAddMode(true); // 추가 모드로 설정
+            }
+            
+            setShowCategoryForm(true);
             return;
         }
         
@@ -205,130 +192,35 @@ export function ScheduleModal({ isOpen, onClose, selectedDate }) {
         }
     };
 
-    // 색상이 사용 가능한지 확인하는 함수
-    const isColorAvailable = (colorName) => {
-        if (!colorName) return false;
-        
-        // 대소문자 통일을 위해 모두 대문자로 변환
-        const normalizedColorName = colorName.toUpperCase();
-        const normalizedUsedColors = usedColors.map(color => color.toUpperCase());
-        
-        return !normalizedUsedColors.includes(normalizedColorName);
-    };
-    
-    // 사용 중인 색상에 해당하는 카테고리 찾기
-    const findCategoryByColor = (colorName) => {
-        if (!colorName) return null;
-        
-        // 대소문자 통일을 위해 모두 대문자로 변환
-        const normalizedColorName = colorName.toUpperCase();
-        
-        return categories.find(cat => 
-            cat.color && cat.color.toUpperCase() === normalizedColorName
-        );
-    };
-
-    // 사용 가능한 첫 번째 색상 찾기
-    const findFirstAvailableColor = () => {
-        for (const color of Object.keys(categoryColorMap)) {
-            if (isColorAvailable(color)) {
-                return color;
-            }
-        }
-        return null; // 모든 색상이 사용 중인 경우
-    };
-
     // 카테고리 추가 또는 수정 함수
-    const addCategory = async () => {
-        try {
-            if (!newCategory.name.trim()) {
-                alert('카테고리 이름을 입력해주세요.');
-                return;
+    const handleAddCategory = async () => {
+        if (!newCategory.name.trim()) {
+            alert('카테고리 이름을 입력해주세요.');
+            return;
+        }
+
+        if (!newCategory.color) {
+            alert('카테고리 색상을 선택해주세요.');
+            return;
+        }
+
+        const result = await addOrUpdateCategory(newCategory);
+        
+        if (result.success) {
+            // 성공적으로 저장된 경우
+            if (result.data) {
+                // 현재 선택된 카테고리를 새로 추가/수정한 카테고리로 변경
+                setFormData(prev => ({
+                    ...prev,
+                    categoryId: result.data.id
+                }));
             }
-
-            if (!newCategory.color) {
-                alert('카테고리 색상을 선택해주세요.');
-                return;
-            }
-
-
-            // 선택한 색상을 사용중인 기존 카테고리 찾기
-            const existingCategory = findCategoryByColor(newCategory.color);
-
-            // 기본 요청 데이터
-            const requestDto = {
-                name: newCategory.name.trim(),
-                color: newCategory.color,
-                categoryType: "SCHEDULE"
-            };
             
-            let response;
-            
-            // 이미 사용 중인 색상을 선택한 경우 (수정)
-            if (existingCategory) {
-                // 수정 요청 데이터에 카테고리 ID 추가
-                const patchDto = {
-                    categoryId: existingCategory.id,
-                    ...requestDto
-                };
-                
-                // 수정 API 호출
-                response = await api.patch('/api/v1/categories', patchDto);
-                
-                if (response.status === 200 && response.data.data) {
-                    const updatedCategoryData = response.data.data;
-                    
-                    // 카테고리 목록에서 수정된 카테고리 업데이트
-                    setCategories(prev => prev.map(cat => 
-                        cat.id === updatedCategoryData.id 
-                            ? { ...updatedCategoryData } 
-                            : cat
-                    ));
-                    
-                    // 사용 중인 색상 목록 업데이트
-                    fetchCategories(); // 전체 카테고리를 다시 가져와 최신 상태 유지
-                    
-                    // 현재 선택된 카테고리를 수정된 카테고리로 변경
-                    setFormData(prev => ({
-                        ...prev,
-                        categoryId: updatedCategoryData.id
-                    }));
-                    
-                    // 카테고리 폼 초기화 및 닫기
-                    resetCategoryForm();
-                }
-            } 
-            // 새 카테고리 생성 (새로운 색상 사용)
-            else {
-                // 생성 API 호출
-                response = await api.post('/api/v1/categories', requestDto);
-                
-                if (response.status === 200 && response.data.data) {
-                    const newCategoryData = response.data.data;
-                    
-                    // 카테고리 목록에 새 카테고리 추가
-                    setCategories(prev => [...prev, {
-                        id: newCategoryData.id,
-                        name: newCategoryData.name,
-                        color: newCategoryData.color
-                    }]);
-                    
-                    // 사용 중인 색상 목록 업데이트
-                    setUsedColors(prev => [...prev, newCategoryData.color]);
-                    
-                    // 현재 선택된 카테고리를 새로 추가한 카테고리로 변경
-                    setFormData(prev => ({
-                        ...prev,
-                        categoryId: newCategoryData.id
-                    }));
-                    
-                    // 카테고리 폼 초기화 및 닫기
-                    resetCategoryForm();
-                }
-            }
-        } catch (error) {
-            console.error('카테고리 저장 실패:', error);
-            alert('카테고리 저장에 실패했습니다.');
+            // 카테고리 폼 초기화 및 닫기
+            resetCategoryForm();
+        } else {
+            // 실패 시 오류 메시지 표시
+            alert(result.message || '카테고리 저장에 실패했습니다.');
         }
     };
     
@@ -337,53 +229,36 @@ export function ScheduleModal({ isOpen, onClose, selectedDate }) {
         setShowCategoryForm(false);
         setNewCategory({ name: "", color: "" });
         setIsCategoryAddMode(true); // 추가 모드로 초기화
+    };
+
+    // 카테고리 삭제 처리 함수
+    const handleDeleteCategory = async () => {
+        const categoryToDelete = findCategoryByColor(newCategory.color);
+        if (!categoryToDelete) return;
         
-        // 카테고리 목록에서 전체 색상 목록 다시 계산
-        const colors = categories.map(cat => cat.color);
-        setUsedColors(colors);
-    };
-
-    // 카테고리 색상 가져오기
-    const getCategoryColorHex = (colorName) => {
-        return categoryColorMap[colorName]?.hex || "#A3B29F";
-    };
-
-    // 카테고리 삭제 함수
-    const deleteCategory = async (categoryId) => {
-        try {
-            if (!categoryId) return;
-            
-            // 사용자 확인
-            if (!confirm("정말 이 카테고리를 삭제하시겠습니까?")) {
-                return;
-            }
-            
-            const response = await api.delete(`/api/v1/categories?categoryId=${categoryId}`);
-            
-            if (response.status === 200) {
-                // 카테고리 목록에서 삭제된 카테고리 제거
-                setCategories(prev => prev.filter(cat => cat.id !== categoryId));
-                
-                // 사용 중인 색상 목록 업데이트
-                fetchCategories();
-                
-                // 삭제된 카테고리가 현재 선택된 카테고리인 경우 첫 번째 카테고리로 변경
-                if (formData.categoryId === categoryId && categories.length > 1) {
-                    const remainingCategories = categories.filter(cat => cat.id !== categoryId);
-                    if (remainingCategories.length > 0) {
-                        setFormData(prev => ({
-                            ...prev,
-                            categoryId: remainingCategories[0].id
-                        }));
-                    }
+        // 사용자 확인
+        if (!confirm("정말 이 카테고리를 삭제하시겠습니까?")) {
+            return;
+        }
+        
+        const result = await deleteCategory(categoryToDelete.id);
+        
+        if (result.success) {
+            // 삭제된 카테고리가 현재 선택된 카테고리인 경우 첫 번째 카테고리로 변경
+            if (formData.categoryId === categoryToDelete.id && categories.length > 1) {
+                const remainingCategories = categories.filter(cat => cat.id !== categoryToDelete.id);
+                if (remainingCategories.length > 0) {
+                    setFormData(prev => ({
+                        ...prev,
+                        categoryId: remainingCategories[0].id
+                    }));
                 }
-                
-                // 카테고리 폼 초기화 및 닫기
-                resetCategoryForm();
             }
-        } catch (error) {
-            console.error('카테고리 삭제 실패:', error);
-            alert('카테고리 삭제에 실패했습니다.');
+            
+            // 카테고리 폼 초기화 및 닫기
+            resetCategoryForm();
+        } else {
+            alert(result.message || '카테고리 삭제에 실패했습니다.');
         }
     };
 
@@ -437,7 +312,7 @@ export function ScheduleModal({ isOpen, onClose, selectedDate }) {
                                                 </option>
                                             );
                                         })}
-                                        {hasAvailableColors && <option value="add_new">+ 새 카테고리 추가</option>}
+                                        <option value="add_new">+ 새 카테고리 추가/수정</option>
                                     </>
                                 ) : (
                                     <>
@@ -459,14 +334,24 @@ export function ScheduleModal({ isOpen, onClose, selectedDate }) {
                                         placeholder="카테고리 이름 입력"
                                     />
                                     {!isColorAvailable(newCategory.color) && newCategory.color && (
-                                        <p className="mt-1 text-[12px] text-subpoint">
-                                            현재 "{findCategoryByColor(newCategory.color)?.name}" 카테고리에서 사용 중인 색상입니다.
+                                        <p className="mt-1 text-[12px] text-gray-600 bg-[#F5F5F5] p-2 rounded">
+                                            <span className="font-medium text-point">수정 모드:</span> 현재 "{findCategoryByColor(newCategory.color)?.name}" 카테고리의 색상입니다.
+                                            {isCategoryAddMode ? 
+                                                <span className="block mt-1 text-[11px]">이름을 입력하면 카테고리를 수정할 수 있습니다. 이름을 비워두면 삭제할 수 있습니다.</span>
+                                                : null
+                                            }
                                         </p>
                                     )}
                                 </div>
                                 
                                 <div className="mb-3">
                                     <label className="block text-[13px] font-medium text-textmain mb-1">색상 선택</label>
+                                    {!hasAvailableColors && (
+                                        <div className="mb-2 text-[12px] text-gray-600 bg-[#FFEAEA] p-2 rounded">
+                                            <span className="font-medium text-[#E07474]">알림:</span> 모든 색상이 이미 사용 중입니다. 
+                                            <span className="block mt-1">카테고리를 수정하거나 삭제할 수 있습니다.</span>
+                                        </div>
+                                    )}
                                     <div className="grid grid-cols-4 gap-2">
                                         {categoryColors.map((color) => (
                                             <button
@@ -476,7 +361,7 @@ export function ScheduleModal({ isOpen, onClose, selectedDate }) {
                                                     ${newCategory.color === color.colorName 
                                                         ? 'ring-2 ring-point bg-[#F0F5ED]' 
                                                         : !isColorAvailable(color.colorName)
-                                                            ? 'bg-white hover:bg-[#F9FBF8] opacity-50' 
+                                                            ? 'bg-[#F5F5F5] hover:bg-[#F0F0F0] border border-gray-300' 
                                                             : 'bg-white hover:bg-[#F9FBF8]'}`}
                                                 onClick={() => {
                                                     // 색상 선택
@@ -526,7 +411,7 @@ export function ScheduleModal({ isOpen, onClose, selectedDate }) {
                                     {isCategoryAddMode ? (
                                         <button
                                             type="button"
-                                            onClick={addCategory}
+                                            onClick={handleAddCategory}
                                             className={`px-3 py-1 bg-point text-white rounded-[6px] text-[13px] 
                                                 ${(!newCategory.name.trim() || !newCategory.color) ? 'opacity-50 cursor-not-allowed' : ''}`}
                                             disabled={!newCategory.name.trim() || !newCategory.color}
@@ -538,12 +423,7 @@ export function ScheduleModal({ isOpen, onClose, selectedDate }) {
                                         newCategory.name.trim() === "" ? (
                                             <button
                                                 type="button"
-                                                onClick={() => {
-                                                    const categoryToDelete = findCategoryByColor(newCategory.color);
-                                                    if (categoryToDelete) {
-                                                        deleteCategory(categoryToDelete.id);
-                                                    }
-                                                }}
+                                                onClick={handleDeleteCategory}
                                                 className="px-3 py-1 bg-[#FFEBEB] text-[#E07474] hover:bg-[#FFE0E0] hover:text-[#D05A5A] rounded-[6px] text-[13px] font-medium"
                                             >
                                                 삭제
@@ -551,7 +431,7 @@ export function ScheduleModal({ isOpen, onClose, selectedDate }) {
                                         ) : (
                                             <button
                                                 type="button"
-                                                onClick={addCategory}
+                                                onClick={handleAddCategory}
                                                 className={`px-3 py-1 bg-point text-white rounded-[6px] text-[13px]`}
                                             >
                                                 수정
