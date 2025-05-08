@@ -75,13 +75,13 @@ export function ScheduleDetailModal({ isOpen, onClose, schedule, onEdit, onDelet
                 <div className="flex justify-end gap-2 mt-6">
                     <button
                         onClick={() => onEdit(schedule.id)}
-                        className="bg-blue-500 text-white rounded-[8px] px-4 py-2 text-[14px] font-medium"
+                        className="bg-point hover:bg-[#435045] text-white rounded-[8px] px-4 py-2 text-[14px] font-medium transition-colors"
                     >
                         수정
                     </button>
                     <button
                         onClick={() => onDelete(schedule.id)}
-                        className="bg-red-500 text-white rounded-[8px] px-4 py-2 text-[14px] font-medium"
+                        className="bg-[#E07474] hover:bg-[#D05A5A] text-white rounded-[8px] px-4 py-2 text-[14px] font-medium transition-colors"
                     >
                         삭제
                     </button>

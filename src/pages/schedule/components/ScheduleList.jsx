@@ -19,7 +19,7 @@ export function ScheduleList({ scheduleList, onAddClick, onItemClick, onEditClic
                                     e.stopPropagation();  // 이벤트 버블링 방지
                                     onEditClick(item.id);
                                 }}
-                                className="text-blue-500 text-[14px]"
+                                className="text-point hover:text-[#435045] font-medium text-[14px] transition-colors"
                             >
                                 수정
                             </button>
@@ -28,7 +28,7 @@ export function ScheduleList({ scheduleList, onAddClick, onItemClick, onEditClic
                                     e.stopPropagation();  // 이벤트 버블링 방지
                                     onDeleteClick(item.id);
                                 }}
-                                className="text-red-500 text-[14px]"
+                                className="text-[#E07474] hover:text-[#D05A5A] font-medium text-[14px] transition-colors"
                             >
                                 삭제
                             </button>
