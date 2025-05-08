@@ -2,20 +2,34 @@ import { useState, useEffect } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { useSchedule } from "../hooks/useSchedule";
+import { registerLocale } from "react-datepicker";
+import ko from 'date-fns/locale/ko';
+
+// 한국어 로케일 등록
+registerLocale('ko', ko);
 
 export function ScheduleModal({ isOpen, onClose, selectedDate }) {
     // useSchedule 훅에서 addSchedule 함수 가져오기
     const { addSchedule } = useSchedule();
 
-    const [formData, setFormData] = useState({
-        coupleId: localStorage.getItem("coupleId"),
-        categoryId: 4, // 기본값
-        title: "",
-        content: "",
-        startTime: selectedDate ? new Date(selectedDate) : new Date(),
-        endTime: selectedDate ? new Date(selectedDate.setHours(selectedDate.getHours() + 1)) : new Date(new Date().setHours(new Date().getHours() + 1)),
-        isAllDay: false,
-        location: ""
+    const [formData, setFormData] = useState(() => {
+        const startTime = selectedDate ? new Date(selectedDate.getTime()) : new Date();
+        const endTime = selectedDate ? new Date(selectedDate.getTime()) : new Date();
+
+        if (endTime) {
+            endTime.setHours(endTime.getHours() + 1);
+        }
+
+        return {
+            coupleId: localStorage.getItem("coupleId"),
+            categoryId: 4,
+            title: "",
+            content: "",
+            startTime,
+            endTime,
+            isAllDay: false,
+            location: ""
+        };
     });
 
     // 카테고리 기능 개발되면 수정 필요함, 목록 조회 및 추가 기능 구현
@@ -49,11 +63,27 @@ export function ScheduleModal({ isOpen, onClose, selectedDate }) {
     };
 
     const handleDateChange = (date, field) => {
-        setFormData(prev => ({
-            ...prev,
-            [field]: date
-        }));
+        setFormData(prev => {
+            // 시작 시간을 변경하는 경우
+            if (field === 'startTime') {
+                // 종료 시간이 시작 시간보다 이전이면 종료 시간도 변경
+                if (prev.endTime && date > prev.endTime) {
+                    const newEndTime = new Date(date);
+                    newEndTime.setHours(date.getHours() + 1);
+                    return {
+                        ...prev,
+                        startTime: date,
+                        endTime: newEndTime
+                    };
+                }
+            }
+            return {
+                ...prev,
+                [field]: date
+            };
+        });
     };
+
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -141,7 +171,57 @@ export function ScheduleModal({ isOpen, onClose, selectedDate }) {
                     </div>
 
                     <div className="mb-4">
-                        <div className="flex items-center mb-2">
+                        {formData.isAllDay ? (
+                            <div>
+                                <label className="block text-[14px] font-medium text-textmain mb-1">날짜</label>
+                                <DatePicker
+                                    selected={formData.startTime}
+                                    onChange={(date) => handleDateChange(date, 'startTime')}
+                                    dateFormat="yyyy년 MM월 dd일"
+                                    dateFormatCalendar="yyyy년 MM월"
+                                    className="w-full px-3 py-2 border border-[#E6EDE4] rounded-[8px] focus:outline-none focus:ring-1 focus:ring-point"
+                                    locale="ko"
+                                />
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 gap-4">
+                                <div>
+                                    <label className="block text-[14px] font-medium text-textmain mb-1">시작 시간</label>
+                                    <DatePicker
+                                        selected={formData.startTime}
+                                        onChange={(date) => handleDateChange(date, 'startTime')}
+                                        showTimeSelect
+                                        dateFormat="yyyy년 MM월 dd일 HH:mm"
+                                        dateFormatCalendar="yyyy년 MM월"
+                                        className="w-full px-3 py-2 border border-[#E6EDE4] rounded-[8px] focus:outline-none focus:ring-1 focus:ring-point"
+                                        locale="ko"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-[14px] font-medium text-textmain mb-1">종료 시간</label>
+                                    <DatePicker
+                                        selected={formData.endTime}
+                                        onChange={(date) => handleDateChange(date, 'endTime')}
+                                        showTimeSelect
+                                        dateFormat="yyyy년 MM월 dd일 HH:mm"
+                                        dateFormatCalendar="yyyy년 MM월"
+                                        className="w-full px-3 py-2 border border-[#E6EDE4] rounded-[8px] focus:outline-none focus:ring-1 focus:ring-point"
+                                        minDate={formData.startTime}
+                                        filterTime={(time) => {
+                                            if (formData.startTime && formData.endTime &&
+                                                formData.startTime.toDateString() === formData.endTime.toDateString()) {
+                                                return time >= formData.startTime;
+                                            }
+                                            return true;
+                                        }}
+                                        locale="ko"
+                                    />
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="flex items-center mt-2">
                             <input
                                 type="checkbox"
                                 id="isAllDay"
@@ -154,31 +234,8 @@ export function ScheduleModal({ isOpen, onClose, selectedDate }) {
                                 하루종일
                             </label>
                         </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-[14px] font-medium text-textmain mb-1">시작 시간</label>
-                                <DatePicker
-                                    selected={formData.startTime}
-                                    onChange={(date) => handleDateChange(date, 'startTime')}
-                                    showTimeSelect={!formData.isAllDay}
-                                    dateFormat={formData.isAllDay ? "yyyy-MM-dd" : "yyyy-MM-dd HH:mm"}
-                                    className="w-full px-3 py-2 border border-[#E6EDE4] rounded-[8px] focus:outline-none focus:ring-1 focus:ring-point"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-[14px] font-medium text-textmain mb-1">종료 시간</label>
-                                <DatePicker
-                                    selected={formData.endTime}
-                                    onChange={(date) => handleDateChange(date, 'endTime')}
-                                    showTimeSelect={!formData.isAllDay}
-                                    dateFormat={formData.isAllDay ? "yyyy-MM-dd" : "yyyy-MM-dd HH:mm"}
-                                    className="w-full px-3 py-2 border border-[#E6EDE4] rounded-[8px] focus:outline-none focus:ring-1 focus:ring-point"
-                                />
-                            </div>
-                        </div>
                     </div>
+
 
                     <div className="mb-4">
                         <label className="block text-[14px] font-medium text-textmain mb-1">장소</label>

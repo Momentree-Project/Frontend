@@ -89,7 +89,15 @@ api.interceptors.response.use(
 
                 // 원래 요청 재시도
                 originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-                return api(originalRequest);
+                const retryResponse = await api(originalRequest);
+
+                // 일정 추가 API인 경우 전역 이벤트 발생
+                if (originalRequest.url === '/api/v1/schedules' && originalRequest.method === 'post') {
+                    // 전역 이벤트 발생
+                    window.dispatchEvent(new CustomEvent('scheduleAdded'));
+                }
+
+                return retryResponse;
             } catch (error) {
                 // 리프레시 토큰도 만료된 경우 로그인 페이지로 리다이렉트
                 window.location.href = `${import.meta.env.VITE_CORE_FRONT_BASE_URL}/`;

@@ -19,8 +19,53 @@ export function useSchedule() {
     const [schedules, setSchedules] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
-    const [selectedDate, setSelectedDate] = useState(new Date("2025-04-24"));
+    const [selectedDate, setSelectedDate] = useState(new Date());
     const selectedDateStr = formatDate(selectedDate);
+    const [refreshTrigger, setRefreshTrigger] = useState(0); // 새로고침 트리거
+
+    // 일정 수정 함수
+    const updateSchedule = async (scheduleId, scheduleData) => {
+        try {
+            const response = await api.patch(`/api/v1/schedules?scheduleId=${scheduleId}`, scheduleData);
+            if (response.status === 200) {
+                fetchSchedules(); // 일정 목록 새로고침
+                return true;
+            }
+            return false;
+        } catch (error) {
+            console.error('일정 수정 실패:', error);
+            return false;
+        }
+    };
+
+    // 일정 삭제 함수
+    const deleteSchedule = async (scheduleId) => {
+        try {
+            const response = await api.delete(`/api/v1/schedules?scheduleId=${scheduleId}`);
+            if (response.status === 200) {
+                fetchSchedules(); // 일정 목록 새로고침
+                return true;
+            }
+            return false;
+        } catch (error) {
+            console.error('일정 삭제 실패:', error);
+            return false;
+        }
+    };
+
+    // 일정 상세 조회 함수
+    const getScheduleDetail = async (scheduleId) => {
+        try {
+            const response = await api.get(`/api/v1/schedules/detail?scheduleId=${scheduleId}`);
+            if (response.status === 200) {
+                return response.data.data;
+            }
+            return null;
+        } catch (error) {
+            console.error('일정 상세 조회 실패:', error);
+            return null;
+        }
+    };
 
     // API에서 일정 데이터 가져오기
     const fetchSchedules = async () => {
@@ -42,8 +87,6 @@ export function useSchedule() {
         try {
             const response = await api.post('/api/v1/schedules', scheduleData);
             if (response.status === 200) {
-                // 일정 추가 성공 후 목록 새로고침
-                await fetchSchedules();
                 return true;
             }
             return false;
@@ -56,6 +99,24 @@ export function useSchedule() {
     // 컴포넌트 마운트 시 작업
     useEffect(() => {
         fetchSchedules();
+    }, [refreshTrigger]); // 새로고침 트리거가 변경될 때 마다 일정 데이터 가져오기
+
+    useEffect(() => {
+        // 일정 추가/수정/삭제 이벤트 리스너
+        const handleScheduleChanged = () => {
+            setRefreshTrigger(prev => prev + 1);
+        };
+
+        window.addEventListener('scheduleAdded', handleScheduleChanged);
+        window.addEventListener('scheduleUpdated', handleScheduleChanged);
+        window.addEventListener('scheduleDeleted', handleScheduleChanged);
+
+        // 컴포넌트 언마운트 시 이벤트 리스너 제거
+        return () => {
+            window.removeEventListener('scheduleAdded', handleScheduleChanged);
+            window.removeEventListener('scheduleUpdated', handleScheduleChanged);
+            window.removeEventListener('scheduleDeleted', handleScheduleChanged);
+        };
     }, []);
 
     // 선택된 날짜의 일정
@@ -82,5 +143,8 @@ export function useSchedule() {
         formatDate,
         fetchSchedules,
         addSchedule,
+        getScheduleDetail,
+        updateSchedule,
+        deleteSchedule,
     };
 }
