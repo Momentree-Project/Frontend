@@ -1,4 +1,4 @@
-export function ScheduleHeader({ selectedDateStr, scheduleList }) {
+export function ScheduleHeader({ selectedDateStr, scheduleList, onScheduleClick }) {
     // 날짜 포맷팅 함수 추가
     const formatDate = (dateString) => {
         const date = new Date(dateString);
@@ -115,8 +115,9 @@ export function ScheduleHeader({ selectedDateStr, scheduleList }) {
                         {scheduleList.map((schedule, index) => (
                             <div
                                 key={schedule.id}
-                                className="px-[16px] py-[10px] hover:bg-gray-50 transition-colors border-l-[3px]"
+                                className="px-[16px] py-[10px] hover:bg-gray-50 transition-colors border-l-[3px] cursor-pointer"
                                 style={{ borderLeftColor: getScheduleColor(index) }}
+                                onClick={() => onScheduleClick && onScheduleClick(schedule.id)}
                             >
                                 <div className="flex items-center justify-between">
                                     <span className="text-[15px] font-medium text-textmain">{schedule.title}</span>

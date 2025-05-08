@@ -93,6 +93,7 @@ function Schedule() {
                 <ScheduleHeader
                     selectedDateStr={selectedDateStr}
                     scheduleList={scheduleList}
+                    onScheduleClick={handleItemClick}
                 />
 
                 {/* 캘린더 카드 */}
