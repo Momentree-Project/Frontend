@@ -1,4 +1,45 @@
+import { useState, useEffect, useCallback } from "react";
+import { useSchedule } from "../hooks/useSchedule";
+
 export function ScheduleDetailModal({ isOpen, onClose, schedule, onEdit, onDelete }) {
+    const { getCategoryById, getCategoryColorHex, categories } = useSchedule();
+    const [category, setCategory] = useState(null);
+
+    // 디버깅용 로그
+    useEffect(() => {
+        if (schedule) {
+            console.log('원본 schedule 객체:', schedule);
+            console.log('카테고리 목록:', categories);
+        }
+    }, [schedule, categories]);
+
+    // 카테고리 정보 로드 함수
+    const loadCategory = useCallback(() => {
+        if (schedule && schedule.categoryId) {
+            console.log('카테고리 ID:', schedule.categoryId);
+            console.log('카테고리 ID 타입:', typeof schedule.categoryId);
+            
+            const categoryInfo = getCategoryById(schedule.categoryId);
+            console.log('찾은 카테고리 정보:', categoryInfo);
+            
+            if (categoryInfo) {
+                setCategory(categoryInfo);
+            } else {
+                console.log('카테고리를 찾을 수 없음');
+                setCategory(null);
+            }
+        } else {
+            console.log('카테고리 ID가 없음:', schedule);
+            setCategory(null);
+        }
+    }, [schedule?.categoryId, getCategoryById]);
+
+    useEffect(() => {
+        if (isOpen) {
+            loadCategory();
+        }
+    }, [isOpen, loadCategory]);
+
     if (!isOpen || !schedule) return null;
 
     // 날짜 포맷팅 함수
@@ -34,6 +75,26 @@ export function ScheduleDetailModal({ isOpen, onClose, schedule, onEdit, onDelet
                 <div className="mb-4">
                     <h4 className="text-[16px] font-semibold mb-1">제목</h4>
                     <p className="text-[16px]">{schedule.title}</p>
+                </div>
+
+                <div className="mb-4">
+                    <h4 className="text-[16px] font-semibold mb-1">카테고리</h4>
+                    {category ? (
+                        <div className="flex items-center">
+                            <div 
+                                className="flex items-center px-2 py-1 rounded-[6px]"
+                                style={{ backgroundColor: `${getCategoryColorHex(category.color)}20` }}
+                            >
+                                <span 
+                                    className="inline-block w-3 h-3 rounded-full mr-2" 
+                                    style={{ backgroundColor: getCategoryColorHex(category.color) }}
+                                ></span>
+                                <p className="text-[14px] font-medium">{category.name}</p>
+                            </div>
+                        </div>
+                    ) : (
+                        <p className="text-[14px] text-gray-500">카테고리 없음</p>
+                    )}
                 </div>
 
                 <div className="mb-4">
@@ -75,13 +136,13 @@ export function ScheduleDetailModal({ isOpen, onClose, schedule, onEdit, onDelet
                 <div className="flex justify-end gap-2 mt-6">
                     <button
                         onClick={() => onEdit(schedule.id)}
-                        className="bg-blue-500 text-white rounded-[8px] px-4 py-2 text-[14px] font-medium"
+                        className="bg-point hover:bg-[#435045] text-white rounded-[8px] px-4 py-2 text-[14px] font-medium transition-colors"
                     >
                         수정
                     </button>
                     <button
                         onClick={() => onDelete(schedule.id)}
-                        className="bg-red-500 text-white rounded-[8px] px-4 py-2 text-[14px] font-medium"
+                        className="bg-[#E07474] hover:bg-[#D05A5A] text-white rounded-[8px] px-4 py-2 text-[14px] font-medium transition-colors"
                     >
                         삭제
                     </button>

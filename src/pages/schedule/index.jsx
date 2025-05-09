@@ -14,6 +14,7 @@ function Schedule() {
         setSelectedDate,
         selectedDateStr,
         scheduleList,
+        schedules,
         hasScheduleOnDate,
         formatDate,
         loading,
@@ -22,6 +23,8 @@ function Schedule() {
         getScheduleDetail,
         updateSchedule,
         deleteSchedule,
+        getCategoryById,
+        getCategoryColorHex
     } = useSchedule();
 
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -93,6 +96,7 @@ function Schedule() {
                 <ScheduleHeader
                     selectedDateStr={selectedDateStr}
                     scheduleList={scheduleList}
+                    onScheduleClick={handleItemClick}
                 />
 
                 {/* 캘린더 카드 */}
@@ -114,6 +118,9 @@ function Schedule() {
                         setSelectedDate={setSelectedDate}
                         hasScheduleOnDate={hasScheduleOnDate}
                         formatDate={formatDate}
+                        schedules={schedules}
+                        getCategoryById={getCategoryById}
+                        getCategoryColorHex={getCategoryColorHex}
                     />
                     {/* 일정 리스트 */}
                     <ScheduleList
