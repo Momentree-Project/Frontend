@@ -137,11 +137,22 @@ function AdditionalInfo() {
       console.log("추가 정보 제출 응답:", response.data);
 
       // 로컬 스토리지에서 storedUserInfo 가져오기
-      const loginUserInfo = localStorage.getItem("loginUserInfo");
 
       if (response.data.success || response.status === 200) {
+        const loginUserInfo = localStorage.getItem("loginUserInfo");
+        const parsedUserInfo = JSON.parse(loginUserInfo);
+        // API 응답에서 birth 가져오기
+        const birth = response.data.data.birth;
+
+        // 기존 정보에 birth 추가
+        parsedUserInfo.birth = birth;
+
+        // 업데이트된 정보를 다시 로컬 스토리지에 저장
+        localStorage.setItem("loginUserInfo", JSON.stringify(parsedUserInfo));
+        const loginUserInfo2 = localStorage.getItem("loginUserInfo");
+
         // coupleId 유무에 따라 다른 페이지로 리다이렉트
-        if (!loginUserInfo.coupleId) {
+        if (!loginUserInfo2.coupleId) {
           // birth는 있지만 coupleId가 없으면 커플 연결 페이지로 이동
           console.log("커플 연결 필요: /connect로 리다이렉트");
           navigate("/connect", { replace: true });
