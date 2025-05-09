@@ -1,7 +1,7 @@
 // src/pages/authAdditionalInfo/index.jsx
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../../api/axiosInstance";
 
 function AdditionalInfo() {
   const navigate = useNavigate();
@@ -88,9 +88,6 @@ function AdditionalInfo() {
     if (name === "privacyConsent") {
       // privacy 동의는 별도 상태로 관리하고
       setPrivacyConsent(checked);
-      // if (checked) {
-      //   setPrivacyError("");
-      // }
     } else {
       // 다른 입력 필드 처리
       setFormData({
@@ -125,21 +122,6 @@ function AdditionalInfo() {
     setError("");
 
     try {
-      // 로컬 스토리지에서 액세스 토큰 가져오기
-      const accessToken = localStorage.getItem("accessToken");
-
-      if (!accessToken) {
-        setError("로그인이 필요합니다.");
-        navigate("/", { replace: true });
-        return;
-      }
-
-      // 요청 헤더에 토큰 포함
-      const config = {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      };
       // 서버로 전송하기 전에 명시적으로 불리언 타입으로 변환
       const dataToSend = {
         ...formData,
@@ -147,19 +129,30 @@ function AdditionalInfo() {
       };
 
       // API 요청 보내기
-      const response = await axios.patch(
-        "http://localhost:8080/api/v1/users/me/additional-info",
+      const response = await api.patch(
+        "/api/v1/users/me/additional-info",
         dataToSend
       );
 
       console.log("추가 정보 제출 응답:", response.data);
 
       // 로컬 스토리지에서 storedUserInfo 가져오기
-      const loginUserInfo = localStorage.getItem("loginUserInfo");
 
       if (response.data.success || response.status === 200) {
+        const loginUserInfo = localStorage.getItem("loginUserInfo");
+        const parsedUserInfo = JSON.parse(loginUserInfo);
+        // API 응답에서 birth 가져오기
+        const birth = response.data.data.birth;
+
+        // 기존 정보에 birth 추가
+        parsedUserInfo.birth = birth;
+
+        // 업데이트된 정보를 다시 로컬 스토리지에 저장
+        localStorage.setItem("loginUserInfo", JSON.stringify(parsedUserInfo));
+        const loginUserInfo2 = localStorage.getItem("loginUserInfo");
+
         // coupleId 유무에 따라 다른 페이지로 리다이렉트
-        if (!loginUserInfo.coupleId) {
+        if (!loginUserInfo2.coupleId) {
           // birth는 있지만 coupleId가 없으면 커플 연결 페이지로 이동
           console.log("커플 연결 필요: /connect로 리다이렉트");
           navigate("/connect", { replace: true });

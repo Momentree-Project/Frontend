@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../../api/axiosInstance";
 
 function CoupleConnect() {
   const location = useLocation();
@@ -45,36 +45,33 @@ function CoupleConnect() {
     }
 
     try {
-      // 로컬 스토리지에서 액세스 토큰 가져오기
-      const accessToken = localStorage.getItem("accessToken");
-
-      if (!accessToken) {
-        setError("로그인이 필요합니다.");
-        navigate("/", { replace: true });
-        return;
-      }
-
-      // 요청 헤더에 토큰 포함
-      const config = {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      };
       // API 요청 보내기
-      const response = await axios.post(
-        "http://localhost:8080/api/v1/couples",
-        {
-          userCode: userCode,
-          coupleStartedDay: coupleStartedDay,
-        },
-        config
-      );
+      const response = await api.post("/api/v1/couples", {
+        userCode: userCode,
+        coupleStartedDay: coupleStartedDay,
+      });
 
       console.log("커플 연결 응답:", response.data);
 
       if (response.data.code === 200) {
         // 성공 시 홈 페이지로 이동
+        const storedUserInfo = localStorage.getItem("loginUserInfo");
+
+        if (storedUserInfo) {
+          const parsedUserInfo = JSON.parse(storedUserInfo);
+
+          // API 응답에서 coupleId 가져오기
+          const coupleId = response.data.data.coupleId;
+
+          // 기존 정보에 coupleId 추가, userCode 삭제
+          parsedUserInfo.coupleId = coupleId;
+          delete parsedUserInfo.userCode;
+
+          // 업데이트된 정보를 다시 로컬 스토리지에 저장
+          localStorage.setItem("loginUserInfo", JSON.stringify(parsedUserInfo));
+        }
         alert("커플 연결이 완료되었습니다!");
+
         navigate("/home", { replace: true });
       } else {
         setError(response.data.message || "연결에 실패했습니다.");
