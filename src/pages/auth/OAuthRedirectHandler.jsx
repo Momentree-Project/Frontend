@@ -20,6 +20,7 @@ const OAuth2RedirectHandler = () => {
             userCode: response.data.data.userCode,
             birth: response.data.data.birth,
             coupleId: response.data.data.coupleId,
+            status: response.data.data.status,
           };
           const accessToken = response.data.data.accessToken;
           console.log("로그인 유저 정보", loginUserInfo);
@@ -28,8 +29,13 @@ const OAuth2RedirectHandler = () => {
           localStorage.setItem("loginUserInfo", JSON.stringify(loginUserInfo));
           localStorage.setItem("accessToken", accessToken);
 
+          if (loginUserInfo.status === "INACTIVE") {
+            // 비활성화 상태일 경우
+            console.log("비활성화 상태: /recover로 리다이렉트");
+            navigate("/recover", { replace: true });
+          }
           // coupleId와 birth 유무에 따라 다른 페이지로 리다이렉트
-          if (!loginUserInfo.birth) {
+          else if (!loginUserInfo.birth) {
             // birth 정보가 없으면 추가 정보 입력 페이지로 우선 이동
             console.log("개인정보 입력 필요: /additional-info로 리다이렉트");
             navigate("/additional-info", { replace: true });
