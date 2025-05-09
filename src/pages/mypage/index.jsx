@@ -183,11 +183,6 @@ function MyPage() {
           coupleId: coupleId,
           coupleStartedDay: editData.coupleStartedDay,
         };
-      } else if (section === "marketing") {
-        endpoint = "/api/v1/users/me/marketing-consent";
-        data = {
-          marketingConsent: editData.marketingConsent,
-        };
       }
 
       // 해당 섹션의 API 호출
@@ -217,14 +212,43 @@ function MyPage() {
 
   const handleBreakupCouple = async () => {
     try {
-      await api.delete("/api/v1/couples");
+      // 로컬스토리지에서 loginUserInfo와 accessToken 가져오기
+      const loginUserInfoStr = localStorage.getItem("loginUserInfo");
+      if (!loginUserInfoStr) {
+        alert("사용자 정보를 찾을 수 없습니다.");
+        return;
+      }
+
+      // JSON 문자열을 객체로 변환하여 coupleId 추출
+      const loginUserInfo = JSON.parse(loginUserInfoStr);
+      const coupleId = loginUserInfo.coupleId;
+
+      if (!coupleId) {
+        alert("연결된 커플 정보가 없습니다.");
+        return;
+      }
+
+      const response = await api.delete(`/api/v1/couples/${coupleId}`);
+
+      // API 응답에서 userCode 추출
+      const userCode = response.data.data.userCode;
+
+      // 로컬스토리지에서 coupleId 제거하고 userCode 추가
+      delete loginUserInfo.coupleId;
+      loginUserInfo.userCode = userCode;
+      localStorage.setItem("loginUserInfo", JSON.stringify(loginUserInfo));
+      // 모달 닫기
+      setShowBreakupModal(false);
 
       alert("커플 연결이 해제되었습니다.");
-      window.location.reload();
+
+      // connect 페이지로 리다이렉트
+      navigate("/connect", { replace: true });
     } catch (error) {
       console.error("커플 연결 해제 실패:", error);
       alert("커플 연결 해제에 실패했습니다.");
     }
+
     setShowBreakupModal(false);
   };
 
@@ -232,7 +256,9 @@ function MyPage() {
     try {
       await api.delete("/api/v1/users/me");
 
-      localStorage.removeItem("accessToken");
+      // 로컬 스토리지의 모든 데이터 삭제
+      localStorage.clear();
+
       alert("회원 탈퇴가 완료되었습니다.");
       navigate("/", { replace: true });
     } catch (error) {
@@ -689,7 +715,8 @@ function MyPage() {
             <div className="mb-3 sm:mb-0 sm:pr-4">
               <p className="text-textmain font-medium">커플 연결 끊기</p>
               <p className="text-textsub text-sm">
-                파트너와의 연결을 해제합니다. 이 작업은 되돌릴 수 없습니다.
+                파트너와의 연결을 해제합니다. 90일 후 모든 데이터가 삭제되며
+                복구할 수 없습니다.
               </p>
             </div>
             <button
@@ -706,8 +733,8 @@ function MyPage() {
             <div className="mb-3 sm:mb-0 sm:pr-4">
               <p className="text-textmain font-medium">회원 탈퇴</p>
               <p className="text-textsub text-sm">
-                계정을 영구적으로 삭제합니다. 모든 데이터가 삭제되며 복구할 수
-                없습니다.
+                계정을 영구적으로 삭제합니다. 90일 후 모든 데이터가 삭제되며
+                복구할 수 없습니다.
               </p>
             </div>
             <button
@@ -752,7 +779,8 @@ function MyPage() {
           <div className="bg-white rounded-lg p-6 w-80">
             <h4 className="text-lg font-bold mb-4">회원 탈퇴</h4>
             <p className="mb-6">
-              정말로 탈퇴하시겠습니까? 모든 데이터가 영구적으로 삭제됩니다.
+              정말로 탈퇴하시겠습니까? 90일 후에 모든 데이터가 영구적으로
+              삭제됩니다.
             </p>
             <div className="flex justify-end space-x-2">
               <button
