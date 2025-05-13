@@ -391,7 +391,15 @@ function MyPage() {
                           ...profile,
                           profileImageUrl: response.data.data,
                         });
-                       
+                        const profileImageUrl = response.data.data;
+                        const loginUserInfoStr =
+                          localStorage.getItem("loginUserInfo");
+                        const loginUserInfo = JSON.parse(loginUserInfoStr);
+                        loginUserInfo.profileImageUrl = profileImageUrl;
+                        localStorage.setItem(
+                          "loginUserInfo",
+                          JSON.stringify(loginUserInfo)
+                        );
                         alert("프로필 이미지가 업로드되었습니다.");
                       })
                       .catch((error) => {
