@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import api from "../../api/axiosInstance"; // axiosInstance.js 경로에 맞게 수정
 
@@ -382,28 +381,17 @@ function MyPage() {
 
                     // 이미지 파일을 FormData에 추가하여 서버에 전송하는 로직
                     const formData = new FormData();
-                    formData.append("profileImage", file);
-
-                    const accessToken = localStorage.getItem("accessToken");
-                    const config = {
-                      headers: {
-                        Authorization: `Bearer ${accessToken}`,
-                        "Content-Type": "multipart/form-data",
-                      },
-                    };
+                    formData.append("file", file);
 
                     // 서버에 이미지 업로드
-                    axios
-                      .post(
-                        "http://localhost:8080/api/v1/users/profile-image",
-                        formData,
-                        config
-                      )
+                    api
+                      .post("api/v1/users/me/image", formData)
                       .then((response) => {
                         setProfile({
                           ...profile,
-                          profileImageUrl: response.data.data.profileImageUrl,
+                          profileImageUrl: response.data.data,
                         });
+                       
                         alert("프로필 이미지가 업로드되었습니다.");
                       })
                       .catch((error) => {
@@ -440,6 +428,59 @@ function MyPage() {
                   />
                 </svg>
               </label>
+
+              {/* 이미지 삭제 버튼 - 이미지가 있을 때만 표시 */}
+              {profile?.profileImageUrl && (
+                <button
+                  onClick={() => {
+                    if (window.confirm("프로필 이미지를 삭제하시겠습니까?")) {
+                      // 서버에 이미지 삭제 요청
+                      api
+                        .delete("api/v1/users/me/image")
+                        .then(() => {
+                          setProfile({
+                            ...profile,
+                            profileImageUrl: null,
+                          });
+
+                          const loginUserInfoStr =
+                            localStorage.getItem("loginUserInfo");
+                          const loginUserInfo = JSON.parse(loginUserInfoStr);
+
+                          // profileImageUrl을 null로 설정
+                          loginUserInfo.profileImageUrl = null;
+                          // 업데이트된 정보를 다시 로컬 스토리지에 저장
+                          localStorage.setItem(
+                            "loginUserInfo",
+                            JSON.stringify(loginUserInfo)
+                          );
+                          alert("프로필 이미지가 삭제되었습니다.");
+                        })
+                        .catch((error) => {
+                          console.error("이미지 삭제 실패:", error);
+                          alert("이미지 삭제에 실패했습니다.");
+                        });
+                    }
+                  }}
+                  className="absolute bottom-0 left-0 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center cursor-pointer shadow-md hover:bg-opacity-90 transition-all"
+                  type="button"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                    />
+                  </svg>
+                </button>
+              )}
             </div>
             <p className="text-textsub text-sm mt-2">프로필 사진</p>
           </div>
