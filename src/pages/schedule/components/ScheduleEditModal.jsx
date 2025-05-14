@@ -291,7 +291,6 @@ export function ScheduleEditModal({ isOpen, onClose, schedule, selectedDate }) {
                 window.dispatchEvent(new Event('scheduleUpdated'));
             }
         } catch (error) {
-            console.error('일정 수정 실패:', error);
             alert('일정 수정에 실패했습니다.');
         }
     };

@@ -54,7 +54,6 @@ export function useSchedule() {
             }
             return false;
         } catch (error) {
-            console.error('일정 수정 실패:', error);
             return false;
         }
     };
@@ -69,7 +68,6 @@ export function useSchedule() {
             }
             return false;
         } catch (error) {
-            console.error('일정 삭제 실패:', error);
             return false;
         }
     };
@@ -83,7 +81,6 @@ export function useSchedule() {
             }
             return null;
         } catch (error) {
-            console.error('일정 상세 조회 실패:', error);
             return null;
         }
     };
@@ -96,7 +93,6 @@ export function useSchedule() {
             setSchedules(response.data.data || []);
             setError(null);
         } catch (error) {
-            console.error('일정 조회 실패:', error);
             setError('일정을 불러오는데 실패했습니다.');
         } finally {
             setLoading(false);
@@ -112,7 +108,6 @@ export function useSchedule() {
             }
             return false;
         } catch (error) {
-            console.error('일정 추가 실패:', error);
             return false;
         }
     };
@@ -135,7 +130,6 @@ export function useSchedule() {
             }
             return [];
         } catch (error) {
-            console.error('카테고리 조회 실패:', error);
             setCategoryError('카테고리를 불러오는데 실패했습니다.');
             // 빈 배열로 초기화
             setCategories([]);
@@ -233,7 +227,6 @@ export function useSchedule() {
             
             return { success: false, message: '카테고리 저장에 실패했습니다.' };
         } catch (error) {
-            console.error('카테고리 저장 실패:', error);
             return { success: false, message: '카테고리 저장에 실패했습니다.' };
         }
     }, [findCategoryByColor]);
@@ -255,7 +248,6 @@ export function useSchedule() {
             
             return { success: false, message: '카테고리 삭제에 실패했습니다.' };
         } catch (error) {
-            console.error('카테고리 삭제 실패:', error);
             return { success: false, message: '카테고리 삭제에 실패했습니다.' };
         }
     }, []);
@@ -343,6 +335,84 @@ export function useSchedule() {
         return result;
     };
 
+    const calculateAnniversaries = useCallback(() => {
+        const loginUserInfo = JSON.parse(localStorage.getItem('loginUserInfo'));
+        if (!loginUserInfo?.coupleStartedDay) return [];
+
+        const startDate = new Date(loginUserInfo.coupleStartedDay);
+        const today = new Date();
+        
+        const anniversaries = [];
+
+        // 100일 단위 기념일 (100일, 200일, 300일, ...)
+        const currentDays = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
+        const next100 = Math.ceil(currentDays / 100) * 100;
+        anniversaries.push({
+            days: next100,
+            title: `${next100}일`,
+            isSpecial: next100 === 100 || next100 % 500 === 0 // 첫 100일과 500일 단위는 특별 표시
+        });
+
+        // 특별한 날짜들
+        const specialDates = [
+            { month: 11, day: 11, title: "빼빼로데이" },
+            { month: 2, day: 14, title: "발렌타인데이" },
+            { month: 3, day: 14, title: "화이트데이" },
+            { month: 12, day: 25, title: "크리스마스" }
+        ];
+
+        // 연간 기념일 (1주년, 2주년, ...)
+        const startYear = startDate.getFullYear();
+        const startMonth = startDate.getMonth();
+        const startDay = startDate.getDate();
+        
+        const nextAnniversary = new Date(today.getFullYear(), startMonth, startDay);
+        if (nextAnniversary < today) {
+            nextAnniversary.setFullYear(nextAnniversary.getFullYear() + 1);
+        }
+        
+        const yearsDiff = nextAnniversary.getFullYear() - startYear;
+        anniversaries.push({
+            days: Math.ceil((nextAnniversary - startDate) / (1000 * 60 * 60 * 24)),
+            title: `${yearsDiff}주년`,
+            isSpecial: true
+        });
+
+        // 특별한 날짜들 추가
+        specialDates.forEach(({ month, day, title }) => {
+            const specialDate = new Date(today.getFullYear(), month - 1, day);
+            if (specialDate < today) {
+                specialDate.setFullYear(specialDate.getFullYear() + 1);
+            }
+            
+            const daysUntilSpecial = Math.ceil((specialDate - startDate) / (1000 * 60 * 60 * 24));
+            anniversaries.push({
+                days: daysUntilSpecial,
+                title: title,
+                date: specialDate,
+                isSpecial: true
+            });
+        });
+
+        return anniversaries
+            .map(anniversary => {
+                const date = new Date(startDate);
+                date.setDate(date.getDate() + anniversary.days);
+                
+                const diffTime = date - today;
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                
+                return {
+                    ...anniversary,
+                    date: date,
+                    dday: diffDays
+                };
+            })
+            .filter(anniversary => anniversary.dday > 0) // 아직 지나지 않은 기념일만
+            .sort((a, b) => a.dday - b.dday) // D-day가 가까운 순으로 정렬
+            .slice(0, 3); // 상위 3개만 반환
+    }, []);
+
     return {
         // 일정 관련 상태 및 함수
         schedules,
@@ -381,5 +451,6 @@ export function useSchedule() {
         
         // 카테고리 데이터 새로고침 함수
         refreshCategories,
+        anniversaries: calculateAnniversaries(),
     };
 }

@@ -1,8 +1,15 @@
 import { useSchedule } from "../hooks/useSchedule";
+import { useMemo } from "react";
 
 export function ScheduleHeader({ selectedDateStr, scheduleList, onScheduleClick }) {
-    const { getCategoryById, getCategoryColorHex } = useSchedule();
+    const { getCategoryById, getCategoryColorHex, anniversaries, categoryColorMap } = useSchedule();
     
+    // 순차적 색상 선택 함수
+    const getHeartColor = (index) => {
+        const colors = Object.values(categoryColorMap).map(color => color.hex);
+        return colors[index % colors.length];
+    };
+
     // 날짜 포맷팅 함수 추가
     const formatDate = (dateString) => {
         const date = new Date(dateString);
@@ -101,9 +108,57 @@ export function ScheduleHeader({ selectedDateStr, scheduleList, onScheduleClick 
             {/* 인사말 */}
             <div className="text-[20px] font-bold text-textmain mb-[8px]">안녕, 오늘의 데이트는?</div>
             {/* D-day 박스 */}
-            <div className="bg-[#E6EDE4] rounded-[12px] px-[14px] py-[10px] text-[15px] text-point flex flex-col gap-[2px]">
-                <span>기념일 D-day</span>
-                <span className="text-[13px] text-subpoint">7월 15일 1주년</span>
+            <div className="bg-gradient-to-br from-[#E6EDE4] to-[#F0F5ED] rounded-[16px] px-[18px] py-[16px] text-[15px] text-point flex flex-col gap-[14px] shadow-[0_2px_8px_rgba(93,106,90,0.08)]">
+                <div className="flex items-center gap-2.5 mb-0.5">
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5 text-point"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                    >
+                        <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        />
+                    </svg>
+                    <span className="font-semibold">기념일 디데이</span>
+                </div>
+                {anniversaries.map((anniversary, index) => (
+                    <div key={anniversary.days} className="flex items-center justify-between bg-[#F5F8F3] rounded-xl px-4 py-3 shadow-sm">
+                        <div className="flex items-center gap-3">
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className={`h-5 w-5 ${anniversary.isSpecial ? '' : 'text-point'}`}
+                                fill={anniversary.isSpecial ? getHeartColor(index) : 'none'}
+                                viewBox="0 0 24 24"
+                                stroke={anniversary.isSpecial ? getHeartColor(index) : 'currentColor'}
+                            >
+                                {anniversary.isSpecial ? (
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                                    />
+                                ) : (
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                                    />
+                                )}
+                            </svg>
+                            <span className="font-medium text-[15px]">{anniversary.title}</span>
+                        </div>
+                        <span className="bg-point/10 text-point px-2.5 py-1 rounded-full text-[13px] font-medium">
+                            D-{anniversary.dday}
+                        </span>
+                    </div>
+                ))}
             </div>
             {/* 오늘 일정 리스트 */}
             <div className="bg-white rounded-[12px] overflow-hidden">
