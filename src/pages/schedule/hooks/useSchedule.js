@@ -54,7 +54,6 @@ export function useSchedule() {
             }
             return false;
         } catch (error) {
-            console.error('일정 수정 실패:', error);
             return false;
         }
     };
@@ -69,7 +68,6 @@ export function useSchedule() {
             }
             return false;
         } catch (error) {
-            console.error('일정 삭제 실패:', error);
             return false;
         }
     };
@@ -83,7 +81,6 @@ export function useSchedule() {
             }
             return null;
         } catch (error) {
-            console.error('일정 상세 조회 실패:', error);
             return null;
         }
     };
@@ -96,7 +93,6 @@ export function useSchedule() {
             setSchedules(response.data.data || []);
             setError(null);
         } catch (error) {
-            console.error('일정 조회 실패:', error);
             setError('일정을 불러오는데 실패했습니다.');
         } finally {
             setLoading(false);
@@ -112,7 +108,6 @@ export function useSchedule() {
             }
             return false;
         } catch (error) {
-            console.error('일정 추가 실패:', error);
             return false;
         }
     };
@@ -135,7 +130,6 @@ export function useSchedule() {
             }
             return [];
         } catch (error) {
-            console.error('카테고리 조회 실패:', error);
             setCategoryError('카테고리를 불러오는데 실패했습니다.');
             // 빈 배열로 초기화
             setCategories([]);
@@ -233,7 +227,6 @@ export function useSchedule() {
             
             return { success: false, message: '카테고리 저장에 실패했습니다.' };
         } catch (error) {
-            console.error('카테고리 저장 실패:', error);
             return { success: false, message: '카테고리 저장에 실패했습니다.' };
         }
     }, [findCategoryByColor]);
@@ -255,7 +248,6 @@ export function useSchedule() {
             
             return { success: false, message: '카테고리 삭제에 실패했습니다.' };
         } catch (error) {
-            console.error('카테고리 삭제 실패:', error);
             return { success: false, message: '카테고리 삭제에 실패했습니다.' };
         }
     }, []);

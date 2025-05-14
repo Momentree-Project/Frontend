@@ -5,31 +5,17 @@ export function ScheduleDetailModal({ isOpen, onClose, schedule, onEdit, onDelet
     const { getCategoryById, getCategoryColorHex, categories } = useSchedule();
     const [category, setCategory] = useState(null);
 
-    // 디버깅용 로그
-    useEffect(() => {
-        if (schedule) {
-            console.log('원본 schedule 객체:', schedule);
-            console.log('카테고리 목록:', categories);
-        }
-    }, [schedule, categories]);
-
     // 카테고리 정보 로드 함수
     const loadCategory = useCallback(() => {
         if (schedule && schedule.categoryId) {
-            console.log('카테고리 ID:', schedule.categoryId);
-            console.log('카테고리 ID 타입:', typeof schedule.categoryId);
-            
             const categoryInfo = getCategoryById(schedule.categoryId);
-            console.log('찾은 카테고리 정보:', categoryInfo);
             
             if (categoryInfo) {
                 setCategory(categoryInfo);
             } else {
-                console.log('카테고리를 찾을 수 없음');
                 setCategory(null);
             }
         } else {
-            console.log('카테고리 ID가 없음:', schedule);
             setCategory(null);
         }
     }, [schedule?.categoryId, getCategoryById]);
