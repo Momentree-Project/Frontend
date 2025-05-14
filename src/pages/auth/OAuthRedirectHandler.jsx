@@ -21,6 +21,7 @@ const OAuth2RedirectHandler = () => {
             birth: response.data.data.birth,
             coupleId: response.data.data.coupleId,
             status: response.data.data.status,
+            coupleStartedDay: response.data.data.coupleStartedDay,
           };
           const accessToken = response.data.data.accessToken;
           console.log("로그인 유저 정보", loginUserInfo);
