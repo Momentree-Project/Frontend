@@ -75,7 +75,7 @@ export function useSchedule() {
     // 일정 상세 조회 함수
     const getScheduleDetail = async (scheduleId) => {
         try {
-            const response = await api.get(`/api/v1/schedules/detail?scheduleId=${scheduleId}`);
+            const response = await api.get(`/api/v1/schedules/${scheduleId}`);
             if (response.status === 200) {
                 return response.data.data;
             }
