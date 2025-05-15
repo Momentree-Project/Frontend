@@ -238,7 +238,7 @@ export function useSchedule() {
                 return { success: false, message: '카테고리 ID가 필요합니다.' };
             }
             
-            const response = await api.delete(`/api/v1/categories?categoryId=${categoryId}`);
+            const response = await api.delete(`/api/v1/categories/${categoryId}`);
             
             if (response.status === 200) {
                 // 카테고리 새로고침 트리거 증가
