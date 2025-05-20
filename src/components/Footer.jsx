@@ -34,17 +34,16 @@ export function Footer() {
 
                     {/* 게시판 */}
                     <Link 
-                        to="/board" 
-                        onClick={handleNotImplemented}
+                        to="/posts" 
                         className={`flex flex-col items-center gap-1 p-2 relative ${
-                            isActive('/board') ? 'text-point' : 'text-subpoint'
+                            isActive('/posts') ? 'text-point' : 'text-subpoint'
                         }`}
                     >
-                        <svg xmlns="http://www.w3.org/2000/svg" className={`h-6 w-6 ${isActive('/board') ? 'drop-shadow-sm' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={isActive('/board') ? 2.2 : 1.8} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+                        <svg xmlns="http://www.w3.org/2000/svg" className={`h-6 w-6 ${isActive('/posts') ? 'drop-shadow-sm' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={isActive('/posts') ? 2.2 : 1.8} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
                         </svg>
                         <span className="text-xs font-medium">게시판</span>
-                        {isActive('/board') && <div className="absolute -bottom-2 w-8 h-1 rounded-full bg-point"></div>}
+                        {isActive('/posts') && <div className="absolute -bottom-2 w-8 h-1 rounded-full bg-point"></div>}
                     </Link>
 
                     {/* 홈 */}

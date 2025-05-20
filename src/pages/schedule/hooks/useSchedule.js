@@ -75,7 +75,7 @@ export function useSchedule() {
     // 일정 상세 조회 함수
     const getScheduleDetail = async (scheduleId) => {
         try {
-            const response = await api.get(`/api/v1/schedules/detail?scheduleId=${scheduleId}`);
+            const response = await api.get(`/api/v1/schedules/${scheduleId}`);
             if (response.status === 200) {
                 return response.data.data;
             }
@@ -238,7 +238,7 @@ export function useSchedule() {
                 return { success: false, message: '카테고리 ID가 필요합니다.' };
             }
             
-            const response = await api.delete(`/api/v1/categories?categoryId=${categoryId}`);
+            const response = await api.delete(`/api/v1/categories/${categoryId}`);
             
             if (response.status === 200) {
                 // 카테고리 새로고침 트리거 증가

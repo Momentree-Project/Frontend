@@ -7,6 +7,7 @@ import OAuth2RedirectHandler from "./pages/auth/OAuthRedirectHandler.jsx"; // OA
 import AdditionalInfo from "./pages/authAdditionalInfo/index.jsx"; // 추가 정보 입력 페이지
 import MyPage from "./pages/mypage/index.jsx";
 import AccountRecovery from "./pages/accountRecovery/index.jsx";
+import Post from "./pages/post/index.jsx";
 import { Layout } from "./components/Layout";
 
 function App() {
@@ -27,6 +28,11 @@ function App() {
         <Route path="/mypage" element={
           <Layout>
             <MyPage />
+          </Layout>
+        } />
+        <Route path="/posts" element={
+          <Layout>
+            <Post />
           </Layout>
         } />
 
