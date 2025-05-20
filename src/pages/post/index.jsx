@@ -37,8 +37,6 @@ function Post() {
     };
 
     const handleDelete = async (postId) => {
-        console.log('삭제할 게시글 ID:', postId);
-        console.log('게시글의 커플 ID:', selectedPost.coupleId);
         if (window.confirm('정말로 이 게시글을 삭제하시겠습니까?')) {
             const success = await deletePost(postId);
             if (success) {
@@ -49,10 +47,6 @@ function Post() {
 
     const handleMenuClick = (post, e) => {
         e.stopPropagation();
-        console.log('선택된 게시글:', post);
-        console.log('선택된 게시글의 user id:', post.userId?.userId);
-        console.log('현재 로그인 유저 id:', post.loginUserId);
-        console.log('두 id가 같은지:', post.userId?.userId === post.loginUserId);
         setSelectedPost(post);
         setIsMenuOpen(true);
     };
