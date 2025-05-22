@@ -14,7 +14,7 @@ export function usePost() {
             const response = await api.get('/api/v1/posts');
             const postsData = response.data.data || [];
             
-            // 서버에서 받은 데이터를 그대로 사용
+            // 서버에서 받은 데이터에는 이미 imageUrls와 imageIds가 포함되어 있음
             setPosts(postsData);
             setError(null);
         } catch (error) {
@@ -27,7 +27,22 @@ export function usePost() {
     // 게시글 작성
     const createPost = async (postData) => {
         try {
-            const response = await api.post('/api/v1/posts', postData);
+            const formData = new FormData();
+            formData.append('content', postData.content);
+            formData.append('fileType', 'POST');
+            
+            if (postData.images && postData.images.length > 0) {
+                postData.images.forEach(image => {
+                    formData.append('images', image);
+                });
+            }
+            
+            const response = await api.post('/api/v1/posts', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                }
+            });
+            
             if (response.status === 200) {
                 setRefreshTrigger(prev => prev + 1);
                 return true;
@@ -83,10 +98,31 @@ export function usePost() {
     // 게시글 수정
     const updatePost = async (postId, postData) => {
         try {
-            const response = await api.patch('/api/v1/posts', {
-                postId,
-                ...postData
+            const formData = new FormData();
+            formData.append('postId', postId);
+            formData.append('content', postData.content);
+            formData.append('fileType', 'POST');
+            
+            // 새 이미지가 있으면 추가
+            if (postData.images && postData.images.length > 0) {
+                postData.images.forEach(image => {
+                    formData.append('images', image);
+                });
+            }
+            
+            // 삭제할 이미지 ID가 있으면 추가
+            if (postData.deleteImageIds && postData.deleteImageIds.length > 0) {
+                postData.deleteImageIds.forEach(imageId => {
+                    formData.append('deleteImageIds', imageId);
+                });
+            }
+            
+            const response = await api.patch('/api/v1/posts', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                }
             });
+            
             if (response.status === 200) {
                 setRefreshTrigger(prev => prev + 1);
                 return true;
