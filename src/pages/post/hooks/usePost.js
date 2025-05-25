@@ -6,6 +6,7 @@ export function usePost() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [refreshTrigger, setRefreshTrigger] = useState(0);
+    const [userLikes, setUserLikes] = useState({}); // 사용자의 좋아요 상태 저장
 
     // 게시글 목록 조회
     const fetchPosts = useCallback(async () => {
@@ -14,8 +15,28 @@ export function usePost() {
             const response = await api.get('/api/v1/posts');
             const postsData = response.data.data || [];
             
-            // 서버에서 받은 데이터를 그대로 사용
+            // 서버에서 받은 데이터에는 이미 imageUrls와 imageIds가 포함되어 있음
             setPosts(postsData);
+            
+            // 각 게시글에 대한 사용자의 좋아요 상태 조회
+            const likesStatus = {};
+            for (const post of postsData) {
+                try {
+                    const likeResponse = await api.get(`/api/v1/posts/${post.postId}/likes`);
+                    if (likeResponse.status === 200) {
+                        const likeData = likeResponse.data.data;
+                        likesStatus[post.postId] = {
+                            isLiked: likeData.isLikedByCurrentUser,
+                            likesCount: likeData.likesCount
+                        };
+                    }
+                } catch (error) {
+                    // 개별 좋아요 조회 실패는 무시
+                    console.warn(`Failed to fetch likes for post ${post.postId}`);
+                }
+            }
+            setUserLikes(likesStatus);
+            
             setError(null);
         } catch (error) {
             setError('게시글을 불러오는데 실패했습니다.');
@@ -27,7 +48,22 @@ export function usePost() {
     // 게시글 작성
     const createPost = async (postData) => {
         try {
-            const response = await api.post('/api/v1/posts', postData);
+            const formData = new FormData();
+            formData.append('content', postData.content);
+            formData.append('fileType', 'POST');
+            
+            if (postData.images && postData.images.length > 0) {
+                postData.images.forEach(image => {
+                    formData.append('images', image);
+                });
+            }
+            
+            const response = await api.post('/api/v1/posts', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                }
+            });
+            
             if (response.status === 200) {
                 setRefreshTrigger(prev => prev + 1);
                 return true;
@@ -57,21 +93,39 @@ export function usePost() {
     // 게시글 좋아요
     const likePost = async (postId) => {
         try {
-            const response = await api.post(`/api/v1/posts/${postId}/like`);
-            if (response.status === 200) {
-                // 좋아요 상태 업데이트
-                setPosts(prevPosts => 
-                    prevPosts.map(post => 
-                        post.id === postId 
-                            ? {
-                                ...post,
-                                isLiked: !post.isLiked,
-                                likeCount: post.isLiked ? post.likeCount - 1 : post.likeCount + 1
-                            }
-                            : post
-                    )
-                );
-                return true;
+            // 좋아요 토글 API 호출
+            const likeResponse = await api.patch(`/api/v1/posts/${postId}/likes`);
+            
+            if (likeResponse.status === 200) {
+                // 좋아요 수 조회 API 호출
+                const countResponse = await api.get(`/api/v1/posts/${postId}/likes`);
+                
+                if (countResponse.status === 200) {
+                    const likeData = countResponse.data.data;
+                    
+                    // 게시글 목록에서 해당 게시글의 좋아요 수 업데이트
+                    setPosts(prevPosts => 
+                        prevPosts.map(post => 
+                            post.postId === postId 
+                                ? {
+                                    ...post,
+                                    likesCount: likeData.likesCount
+                                }
+                                : post
+                        )
+                    );
+                    
+                    // 사용자 좋아요 상태 업데이트
+                    setUserLikes(prev => ({
+                        ...prev,
+                        [postId]: {
+                            isLiked: likeData.isLikedByCurrentUser,
+                            likesCount: likeData.likesCount
+                        }
+                    }));
+                    
+                    return true;
+                }
             }
             return false;
         } catch (error) {
@@ -83,10 +137,31 @@ export function usePost() {
     // 게시글 수정
     const updatePost = async (postId, postData) => {
         try {
-            const response = await api.patch('/api/v1/posts', {
-                postId,
-                ...postData
+            const formData = new FormData();
+            formData.append('postId', postId);
+            formData.append('content', postData.content);
+            formData.append('fileType', 'POST');
+            
+            // 새 이미지가 있으면 추가
+            if (postData.images && postData.images.length > 0) {
+                postData.images.forEach(image => {
+                    formData.append('images', image);
+                });
+            }
+            
+            // 삭제할 이미지 ID가 있으면 추가
+            if (postData.deleteImageIds && postData.deleteImageIds.length > 0) {
+                postData.deleteImageIds.forEach(imageId => {
+                    formData.append('deleteImageIds', imageId);
+                });
+            }
+            
+            const response = await api.patch('/api/v1/posts', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                }
             });
+            
             if (response.status === 200) {
                 setRefreshTrigger(prev => prev + 1);
                 return true;
@@ -106,6 +181,7 @@ export function usePost() {
         posts,
         loading,
         error,
+        userLikes,
         createPost,
         deletePost,
         updatePost,

@@ -1,39 +1,43 @@
 import React, { useState } from 'react';
 import { usePost } from './hooks/usePost';
 
+// 모달 컴포넌트 import
+import ImageViewerModal from './components/ImageViewerModal';
+import PostMenuModal from './components/PostMenuModal';
+import EditPostModal from './components/EditPostModal';
+import CreatePostModal from './components/CreatePostModal';
+
 function Post() {
     const [isWriting, setIsWriting] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
-    const [content, setContent] = useState('');
     const [selectedPost, setSelectedPost] = useState(null);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const [likedPosts, setLikedPosts] = useState({});
-    const { posts, loading, error, createPost, deletePost, updatePost, currentUserId } = usePost();
+    
+    // 이미지 뷰어 관련 상태
+    const [isImageViewerOpen, setIsImageViewerOpen] = useState(false);
+    const [viewerImageUrls, setViewerImageUrls] = useState([]);
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
+    
+    const { posts, loading, error, userLikes, createPost, deletePost, updatePost, likePost } = usePost();
 
     // 로그인한 사용자 정보 가져오기
     const loginUserInfo = JSON.parse(localStorage.getItem('loginUserInfo') || '{}');
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        if (!content.trim()) return;
-
-        const success = await createPost({ content });
-        if (success) {
-            setContent('');
-            setIsWriting(false);
-        }
+    const handleCreatePost = (postData) => {
+        createPost(postData).then(success => {
+            if (success) {
+                setIsWriting(false);
+            }
+        });
     };
 
-    const handleEdit = async (e) => {
-        e.preventDefault();
-        if (!content.trim()) return;
-
-        const success = await updatePost(selectedPost.postId, { content });
-        if (success) {
-            setContent('');
-            setIsEditing(false);
-            setSelectedPost(null);
-        }
+    const handleUpdatePost = (postId, postData) => {
+        updatePost(postId, postData).then(success => {
+            if (success) {
+                setIsEditing(false);
+                setSelectedPost(null);
+            }
+        });
     };
 
     const handleDelete = async (postId) => {
@@ -41,6 +45,7 @@ function Post() {
             const success = await deletePost(postId);
             if (success) {
                 setIsMenuOpen(false);
+                setSelectedPost(null);
             }
         }
     };
@@ -54,15 +59,32 @@ function Post() {
     const handleEditClick = () => {
         setIsMenuOpen(false);
         setIsEditing(true);
-        setContent(selectedPost.content);
     };
 
     const handleLike = (postId) => {
-        setLikedPosts(prev => {
-            const newState = { ...prev };
-            newState[postId] = !prev[postId];
-            return newState;
-        });
+        likePost(postId);
+    };
+
+    // 이미지 뷰어 열기
+    const openImageViewer = (imageUrls, startIndex = 0) => {
+        setViewerImageUrls(imageUrls);
+        setCurrentImageIndex(startIndex);
+        setIsImageViewerOpen(true);
+    };
+    
+    // 이미지 뷰어 닫기
+    const closeImageViewer = () => {
+        setIsImageViewerOpen(false);
+    };
+
+    // 이미지 그리드 레이아웃 결정 함수
+    const getGridClass = (count) => {
+        switch(count) {
+            case 1: return 'grid-cols-1';
+            case 2: return 'grid-cols-2';
+            case 3: return 'grid-cols-3';
+            default: return 'grid-cols-2';
+        }
     };
 
     // 시간 포맷팅 함수
@@ -102,124 +124,37 @@ function Post() {
                     )}
                 </div>
 
-                {/* 게시글 수정 폼 */}
-                {isEditing && (
-                    <div className="fixed inset-0 z-20 bg-black/50 flex items-center justify-center">
-                        <div className="bg-white w-full max-w-[420px] rounded-t-[20px] p-4">
-                            <div className="flex justify-between items-center mb-4">
-                                <h2 className="text-[16px] font-semibold">게시글 수정</h2>
-                                <button 
-                                    onClick={() => {
-                                        setIsEditing(false);
-                                        setSelectedPost(null);
-                                        setContent('');
-                                    }}
-                                    className="text-gray-500"
-                                >
-                                    ✕
-                                </button>
-                            </div>
-                            <form onSubmit={handleEdit}>
-                                <textarea
-                                    value={content}
-                                    onChange={(e) => setContent(e.target.value)}
-                                    placeholder="무슨 생각을 하고 계신가요?"
-                                    required
-                                    className="w-full min-h-[120px] p-3 border border-gray-200 rounded-[12px] resize-y mb-3 text-[14px] focus:outline-none focus:ring-2 focus:ring-point/20"
-                                />
-                                <div className="flex justify-end">
-                                    <button 
-                                        type="submit"
-                                        className="bg-point text-white rounded-[8px] px-4 py-2 text-[14px] font-medium"
-                                    >
-                                        수정하기
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                )}
+                {/* 모달 컴포넌트들 */}
+                <EditPostModal 
+                    isOpen={isEditing}
+                    onClose={() => {
+                        setIsEditing(false);
+                        setSelectedPost(null);
+                    }}
+                    post={selectedPost}
+                    onEdit={handleUpdatePost}
+                />
 
-                {/* 게시글 작성 폼 */}
-                {isWriting && (
-                    <div className="fixed inset-0 z-20 bg-black/50 flex items-center justify-center">
-                        <div className="bg-white w-full max-w-[420px] rounded-t-[20px] p-4">
-                            <div className="flex justify-between items-center mb-4">
-                                <h2 className="text-[16px] font-semibold">새 글 작성</h2>
-                                <button 
-                                    onClick={() => setIsWriting(false)}
-                                    className="text-gray-500"
-                                >
-                                    ✕
-                                </button>
-                            </div>
-                            <form onSubmit={handleSubmit}>
-                                <textarea
-                                    value={content}
-                                    onChange={(e) => setContent(e.target.value)}
-                                    placeholder="무슨 생각을 하고 계신가요?"
-                                    required
-                                    className="w-full min-h-[120px] p-3 border border-gray-200 rounded-[12px] resize-y mb-3 text-[14px] focus:outline-none focus:ring-2 focus:ring-point/20"
-                                />
-                                <div className="flex justify-end">
-                                    <button 
-                                        type="submit"
-                                        className="bg-point text-white rounded-[8px] px-4 py-2 text-[14px] font-medium"
-                                    >
-                                        게시하기
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                )}
+                <CreatePostModal 
+                    isOpen={isWriting}
+                    onClose={() => setIsWriting(false)}
+                    onCreate={handleCreatePost}
+                />
 
-                {/* 게시글 메뉴 모달 */}
-                {isMenuOpen && selectedPost && (
-                    <div 
-                        className="fixed inset-0 z-30 bg-black/50 flex items-end justify-center"
-                        onClick={() => setIsMenuOpen(false)}
-                    >
-                        <div 
-                            className="bg-white w-full max-w-[420px] rounded-t-[20px] p-4"
-                            onClick={e => e.stopPropagation()}
-                        >
-                            <div className="flex justify-between items-center mb-4">
-                                <h2 className="text-[16px] font-semibold">게시글 메뉴</h2>
-                                <button 
-                                    onClick={() => setIsMenuOpen(false)}
-                                    className="text-gray-500"
-                                >
-                                    ✕
-                                </button>
-                            </div>
-                            <div className="space-y-2">
-                                {selectedPost?.userId?.userId === selectedPost?.loginUserId && (
-                                    <>
-                                        <button 
-                                            onClick={handleEditClick}
-                                            className="w-full text-left px-4 py-3 text-[14px] text-gray-700 hover:bg-gray-50 rounded-lg"
-                                        >
-                                            수정하기
-                                        </button>
-                                        <button 
-                                            onClick={() => handleDelete(selectedPost.postId)}
-                                            className="w-full text-left px-4 py-3 text-[14px] text-red-500 hover:bg-gray-50 rounded-lg"
-                                        >
-                                            삭제하기
-                                        </button>
-                                    </>
-                                )}
-                                <button 
-                                    onClick={() => setIsMenuOpen(false)}
-                                    className="w-full text-left px-4 py-3 text-[14px] text-gray-700 hover:bg-gray-50 rounded-lg"
-                                >
-                                    취소
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
+                <PostMenuModal
+                    isOpen={isMenuOpen}
+                    onClose={() => setIsMenuOpen(false)}
+                    post={selectedPost}
+                    onEdit={handleEditClick}
+                    onDelete={() => selectedPost && handleDelete(selectedPost.postId)}
+                />
+
+                <ImageViewerModal 
+                    isOpen={isImageViewerOpen}
+                    onClose={closeImageViewer}
+                    images={viewerImageUrls}
+                    currentIndex={currentImageIndex}
+                />
 
                 {/* 게시글 목록 */}
                 <div className="flex-1 px-2 pt-2 pb-6">
@@ -284,18 +219,61 @@ function Post() {
                                     </p>
                                 </div>
 
+                                {/* 게시글 이미지 */}
+                                {post.imageUrls && post.imageUrls.length > 0 && (
+                                    <div className="px-4 pb-3">
+                                        {post.imageUrls.length === 1 ? (
+                                            <div 
+                                                className="cursor-pointer" 
+                                                onClick={() => openImageViewer(post.imageUrls, 0)}
+                                            >
+                                                <img 
+                                                    src={post.imageUrls[0]} 
+                                                    alt="게시글 이미지" 
+                                                    className="w-full h-auto rounded-lg"
+                                                    loading="lazy"
+                                                />
+                                            </div>
+                                        ) : (
+                                            <div className={`grid ${getGridClass(Math.min(post.imageUrls.length, 4))} gap-2`}>
+                                                {post.imageUrls.slice(0, 4).map((url, index) => (
+                                                    <div 
+                                                        key={index} 
+                                                        className="relative cursor-pointer"
+                                                        onClick={() => openImageViewer(post.imageUrls, index)}
+                                                    >
+                                                        <img 
+                                                            src={url} 
+                                                            alt={`게시글 이미지 ${index + 1}`} 
+                                                            className="w-full h-28 object-cover rounded-lg"
+                                                            loading="lazy"
+                                                        />
+                                                        {post.imageUrls.length > 4 && index === 3 && (
+                                                            <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-lg">
+                                                                <span className="text-white font-medium">+{post.imageUrls.length - 4}</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
                                 {/* 게시글 액션 */}
                                 <div className="px-4 pb-4 flex items-center gap-4">
                                     <button 
                                         onClick={() => handleLike(post.postId)}
                                         className={`flex items-center gap-1 transition-colors ${
-                                            likedPosts[post.postId] ? 'text-red-500' : 'text-gray-500 hover:text-red-500'
+                                            userLikes[post.postId]?.isLiked 
+                                                ? 'text-red-500' 
+                                                : 'text-gray-500 hover:text-red-500'
                                         }`}
                                     >
                                         <svg 
                                             xmlns="http://www.w3.org/2000/svg" 
                                             className="h-5 w-5 transition-all hover:scale-110" 
-                                            fill={likedPosts[post.postId] ? 'currentColor' : 'none'}
+                                            fill={userLikes[post.postId]?.isLiked ? 'currentColor' : 'none'}
                                             viewBox="0 0 24 24" 
                                             stroke="currentColor"
                                         >
@@ -306,7 +284,9 @@ function Post() {
                                                 d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" 
                                             />
                                         </svg>
-                                        <span className="text-[13px]">{likedPosts[post.postId] ? 1 : 0}</span>
+                                        <span className="text-[13px]">
+                                            {userLikes[post.postId]?.likesCount || post.likesCount || 0}
+                                        </span>
                                     </button>
                                     <button className="flex items-center gap-1 text-gray-500">
                                         <svg 
