@@ -12,14 +12,13 @@ function Post() {
     const [isEditing, setIsEditing] = useState(false);
     const [selectedPost, setSelectedPost] = useState(null);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const [likedPosts, setLikedPosts] = useState({});
     
     // 이미지 뷰어 관련 상태
     const [isImageViewerOpen, setIsImageViewerOpen] = useState(false);
     const [viewerImageUrls, setViewerImageUrls] = useState([]);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     
-    const { posts, loading, error, createPost, deletePost, updatePost, likePost } = usePost();
+    const { posts, loading, error, userLikes, createPost, deletePost, updatePost, likePost } = usePost();
 
     // 로그인한 사용자 정보 가져오기
     const loginUserInfo = JSON.parse(localStorage.getItem('loginUserInfo') || '{}');
@@ -63,15 +62,7 @@ function Post() {
     };
 
     const handleLike = (postId) => {
-        likePost(postId).then(success => {
-            if (success) {
-                setLikedPosts(prev => {
-                    const newState = { ...prev };
-                    newState[postId] = !prev[postId];
-                    return newState;
-                });
-            }
-        });
+        likePost(postId);
     };
 
     // 이미지 뷰어 열기
@@ -274,13 +265,15 @@ function Post() {
                                     <button 
                                         onClick={() => handleLike(post.postId)}
                                         className={`flex items-center gap-1 transition-colors ${
-                                            likedPosts[post.postId] ? 'text-red-500' : 'text-gray-500 hover:text-red-500'
+                                            userLikes[post.postId]?.isLiked 
+                                                ? 'text-red-500' 
+                                                : 'text-gray-500 hover:text-red-500'
                                         }`}
                                     >
                                         <svg 
                                             xmlns="http://www.w3.org/2000/svg" 
                                             className="h-5 w-5 transition-all hover:scale-110" 
-                                            fill={likedPosts[post.postId] ? 'currentColor' : 'none'}
+                                            fill={userLikes[post.postId]?.isLiked ? 'currentColor' : 'none'}
                                             viewBox="0 0 24 24" 
                                             stroke="currentColor"
                                         >
@@ -291,7 +284,9 @@ function Post() {
                                                 d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" 
                                             />
                                         </svg>
-                                        <span className="text-[13px]">{likedPosts[post.postId] ? 1 : 0}</span>
+                                        <span className="text-[13px]">
+                                            {userLikes[post.postId]?.likesCount || post.likesCount || 0}
+                                        </span>
                                     </button>
                                     <button className="flex items-center gap-1 text-gray-500">
                                         <svg 
