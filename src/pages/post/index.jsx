@@ -168,10 +168,22 @@ function Post() {
                             >
                                 {/* 게시글 헤더 */}
                                 <div className="p-4 flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-full flex items-center justify-center bg-point/10 relative">
-                                        <span className="font-medium text-point">
-                                            {post.userId?.userName?.[0] || 'U'}
-                                        </span>
+                                    <div className="w-10 h-10 relative">
+                                        <div className="w-full h-full rounded-full overflow-hidden">
+                                            {post.userId?.profileImageUrl ? (
+                                                <img 
+                                                    src={post.userId.profileImageUrl} 
+                                                    alt={`${post.userId.userName}의 프로필`}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center bg-point/10">
+                                                    <span className="font-medium text-point">
+                                                        {post.userId?.userName?.[0] || 'U'}
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </div>
                                         {!isMyPost && (
                                             <span className="absolute -bottom-1 -right-1 bg-white rounded-full p-[2px] shadow">
                                                 <svg 
