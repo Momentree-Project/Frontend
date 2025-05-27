@@ -160,6 +160,37 @@ function Post() {
         });
     };
 
+    // 댓글/답글 수정
+    const handleEditComment = async (commentId, postId, newContent) => {
+        try {
+            const response = await api.patch(`/api/v1/posts/comments/${commentId}`, {
+                content: newContent
+            });
+            
+            // HTTP 상태는 200이지만 응답 데이터에 에러 코드가 있는 경우 처리
+            if (response.data.code !== 200 && response.data.code !== 'SUCCESS') {
+                alert(response.data.message || '댓글 수정에 실패했습니다.');
+                return false;
+            }
+            
+            const updatedComments = await getComments(postId);
+            setComments(prev => ({
+                ...prev,
+                [postId]: updatedComments
+            }));
+            return true;
+        } catch (error) {
+            let errorMessage = '댓글 수정에 실패했습니다.';
+            
+            if (error.response?.data?.message) {
+                errorMessage = error.response.data.message;
+            }
+            
+            alert(errorMessage);
+            return false;
+        }
+    };
+
     // 댓글/답글 삭제
     const handleDeleteComment = async (commentId, postId) => {
         if (!window.confirm('정말로 이 댓글을 삭제하시겠습니까?')) return;
@@ -432,6 +463,7 @@ function Post() {
                                                 ) : null
                                             )}
                                             onDeleteComment={(commentId) => handleDeleteComment(commentId, post.postId)}
+                                            onEditComment={(commentId, newContent) => handleEditComment(commentId, post.postId, newContent)}
                                         />
                                         {/* 댓글/답글 작성 폼 (하단, 답글 모드 아닐 때만) */}
                                         {!(replyMode && replyMode.postId === post.postId) && (
