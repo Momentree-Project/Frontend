@@ -6,7 +6,7 @@ export function usePost() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [refreshTrigger, setRefreshTrigger] = useState(0);
-    const [userLikes, setUserLikes] = useState({}); // 사용자의 좋아요 상태 저장
+    const [userLikes, setUserLikes] = useState({});
 
     // 게시글 목록 조회
     const fetchPosts = useCallback(async () => {
@@ -142,14 +142,12 @@ export function usePost() {
             formData.append('content', postData.content);
             formData.append('fileType', 'POST');
             
-            // 새 이미지가 있으면 추가
             if (postData.images && postData.images.length > 0) {
                 postData.images.forEach(image => {
                     formData.append('images', image);
                 });
             }
             
-            // 삭제할 이미지 ID가 있으면 추가
             if (postData.deleteImageIds && postData.deleteImageIds.length > 0) {
                 postData.deleteImageIds.forEach(imageId => {
                     formData.append('deleteImageIds', imageId);
@@ -173,6 +171,35 @@ export function usePost() {
         }
     };
 
+    // 댓글 작성
+    const createComment = async (commentData) => {
+        try {
+            const response = await api.post('/api/v1/posts/comments', commentData);
+            if (response.status === 200) {
+                setRefreshTrigger(prev => prev + 1);
+                return response.data;
+            }
+            return null;
+        } catch (error) {
+            setError('댓글 작성에 실패했습니다.');
+            throw error;
+        }
+    };
+
+    // 댓글 조회
+    const getComments = async (postId) => {
+        try {
+            const response = await api.get(`/api/v1/posts/comments/${postId}`);
+            if (response.status === 200) {
+                return response.data.data;
+            }
+            return [];
+        } catch (error) {
+            setError('댓글을 불러오는데 실패했습니다.');
+            throw error;
+        }
+    };
+
     useEffect(() => {
         fetchPosts();
     }, [fetchPosts, refreshTrigger]);
@@ -185,6 +212,8 @@ export function usePost() {
         createPost,
         deletePost,
         updatePost,
-        likePost
+        likePost,
+        createComment,
+        getComments
     };
 } 

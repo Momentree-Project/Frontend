@@ -6,6 +6,8 @@ import ImageViewerModal from './components/ImageViewerModal';
 import PostMenuModal from './components/PostMenuModal';
 import EditPostModal from './components/EditPostModal';
 import CreatePostModal from './components/CreatePostModal';
+import CommentForm from '../../components/CommentForm';
+import CommentList from '../../components/CommentList';
 
 function Post() {
     const [isWriting, setIsWriting] = useState(false);
@@ -18,7 +20,13 @@ function Post() {
     const [viewerImageUrls, setViewerImageUrls] = useState([]);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     
-    const { posts, loading, error, userLikes, createPost, deletePost, updatePost, likePost } = usePost();
+    // 댓글 관련 상태
+    const [showComments, setShowComments] = useState({});
+    const [comments, setComments] = useState({});
+    // 답글 모드 상태 추가
+    const [replyMode, setReplyMode] = useState(null); // { postId, parentId, parentAuthor, level }
+    
+    const { posts, loading, error, userLikes, createPost, deletePost, updatePost, likePost, createComment, getComments, modifiedPosts } = usePost();
 
     // 로그인한 사용자 정보 가져오기
     const loginUserInfo = JSON.parse(localStorage.getItem('loginUserInfo') || '{}');
@@ -63,6 +71,52 @@ function Post() {
 
     const handleLike = (postId) => {
         likePost(postId);
+    };
+
+    // 댓글 토글
+    const toggleComments = async (postId) => {
+        const newShowComments = !showComments[postId];
+        setShowComments(prev => ({
+            ...prev,
+            [postId]: newShowComments
+        }));
+
+        // 댓글 섹션이 열릴 때만 댓글을 불러옴
+        if (newShowComments && !comments[postId]) {
+            try {
+                const commentsData = await getComments(postId);
+                setComments(prev => ({
+                    ...prev,
+                    [postId]: commentsData
+                }));
+            } catch (error) {
+                console.error('댓글 불러오기 실패:', error);
+            }
+        }
+    };
+
+    // 댓글 추가
+    const handleCommentSubmit = async (postId, newComment) => {
+        try {
+            await createComment(newComment);
+            const updatedComments = await getComments(postId);
+            setComments(prev => ({
+                ...prev,
+                [postId]: updatedComments
+            }));
+            setReplyMode(null); // 작성 후 항상 일반 모드로 복귀
+        } catch (error) {
+            console.error('댓글 작성 실패:', error);
+        }
+    };
+
+    // 답글 모드 진입
+    const handleReplyClick = (postId, parentId, parentAuthor) => {
+        setReplyMode({ postId, parentId, parentAuthor, level: 1 });
+    };
+    // 답글 모드 취소
+    const handleReplyCancel = () => {
+        setReplyMode(null);
     };
 
     // 이미지 뷰어 열기
@@ -208,10 +262,7 @@ function Post() {
                                             </span>
                                         </div>
                                         <div className="text-[12px] text-gray-500">
-                                            {post.updatedAt && post.createdAt !== post.updatedAt 
-                                                ? `${formatTime(post.updatedAt)} (수정)`
-                                                : formatTime(post.createdAt)
-                                            }
+                                            {formatTime(post.createdAt)}
                                         </div>
                                     </div>
                                     {isMyPost && (
@@ -276,7 +327,8 @@ function Post() {
                                 <div className="px-4 pb-4 flex items-center gap-4">
                                     <button 
                                         onClick={() => handleLike(post.postId)}
-                                        className={`flex items-center gap-1 transition-colors ${
+                                        style={{ cursor: 'pointer' }}
+                                        className={`flex items-center gap-1 transition-colors hover:opacity-75 ${
                                             userLikes[post.postId]?.isLiked 
                                                 ? 'text-red-500' 
                                                 : 'text-gray-500 hover:text-red-500'
@@ -284,6 +336,7 @@ function Post() {
                                     >
                                         <svg 
                                             xmlns="http://www.w3.org/2000/svg" 
+                                            style={{ cursor: 'pointer' }}
                                             className="h-5 w-5 transition-all hover:scale-110" 
                                             fill={userLikes[post.postId]?.isLiked ? 'currentColor' : 'none'}
                                             viewBox="0 0 24 24" 
@@ -300,10 +353,15 @@ function Post() {
                                             {userLikes[post.postId]?.likesCount || post.likesCount || 0}
                                         </span>
                                     </button>
-                                    <button className="flex items-center gap-1 text-gray-500">
+                                    <button 
+                                        onClick={() => toggleComments(post.postId)}
+                                        style={{ cursor: 'pointer' }}
+                                        className={`flex items-center gap-1 text-gray-500 hover:text-blue-500 transition-colors ${showComments[post.postId] ? 'text-blue-500' : ''}`}
+                                    >
                                         <svg 
                                             xmlns="http://www.w3.org/2000/svg" 
-                                            className="h-5 w-5" 
+                                            style={{ cursor: 'pointer' }}
+                                            className="h-5 w-5"
                                             fill="none" 
                                             viewBox="0 0 24 24" 
                                             stroke="currentColor"
@@ -315,9 +373,50 @@ function Post() {
                                                 d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" 
                                             />
                                         </svg>
-                                        <span className="text-[13px]">0</span>
+                                        <span className="text-[13px] font-medium">
+                                            {comments[post.postId]
+                                                ? comments[post.postId].length
+                                                : post.commentCount ?? 0}
+                                        </span>
                                     </button>
                                 </div>
+
+                                {/* 댓글 섹션 */}
+                                {showComments[post.postId] && (
+                                    <div className="px-4 pb-4 border-t border-gray-100">
+                                        {/* 댓글 목록 */}
+                                        <CommentList 
+                                            comments={comments[post.postId] || []}
+                                            onReplyClick={(parentId, parentAuthor) => handleReplyClick(post.postId, parentId, parentAuthor)}
+                                            replyMode={replyMode}
+                                            renderReplyForm={(parentId, parentAuthor) => (
+                                                replyMode && replyMode.postId === post.postId && replyMode.parentId === parentId ? (
+                                                    <CommentForm
+                                                        postId={post.postId}
+                                                        level={1}
+                                                        parentId={parentId}
+                                                        parentAuthor={parentAuthor}
+                                                        onCommentSubmit={(newComment) => handleCommentSubmit(post.postId, newComment)}
+                                                        onCancelReply={handleReplyCancel}
+                                                        isReplyMode={true}
+                                                    />
+                                                ) : null
+                                            )}
+                                        />
+                                        {/* 댓글/답글 작성 폼 (하단, 답글 모드 아닐 때만) */}
+                                        {!(replyMode && replyMode.postId === post.postId) && (
+                                            <CommentForm 
+                                                postId={post.postId}
+                                                level={0}
+                                                parentId={null}
+                                                parentAuthor={null}
+                                                onCommentSubmit={(newComment) => handleCommentSubmit(post.postId, newComment)}
+                                                onCancelReply={handleReplyCancel}
+                                                isReplyMode={false}
+                                            />
+                                        )}
+                                    </div>
+                                )}
                             </article>
                         );
                     })}
