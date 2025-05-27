@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { usePost } from './hooks/usePost';
+import api from '../../api/axiosInstance';
 
 // 모달 컴포넌트 import
 import ImageViewerModal from './components/ImageViewerModal';
@@ -157,6 +158,34 @@ function Post() {
             month: 'long',
             day: 'numeric'
         });
+    };
+
+    // 댓글/답글 삭제
+    const handleDeleteComment = async (commentId, postId) => {
+        if (!window.confirm('정말로 이 댓글을 삭제하시겠습니까?')) return;
+        try {
+            const response = await api.delete(`/api/v1/posts/comments/${commentId}`);
+            
+            // HTTP 상태는 200이지만 응답 데이터에 에러 코드가 있는 경우 처리
+            if (response.data.code !== 200 && response.data.code !== 'SUCCESS') {
+                alert(response.data.message || '댓글 삭제에 실패했습니다.');
+                return;
+            }
+            
+            const updatedComments = await getComments(postId);
+            setComments(prev => ({
+                ...prev,
+                [postId]: updatedComments
+            }));
+        } catch (error) {
+            let errorMessage = '댓글 삭제에 실패했습니다.';
+            
+            if (error.response?.data?.message) {
+                errorMessage = error.response.data.message;
+            }
+            
+            alert(errorMessage);
+        }
     };
 
     if (loading) return <div className="text-center py-5 text-lg text-gray-600">로딩 중...</div>;
@@ -402,6 +431,7 @@ function Post() {
                                                     />
                                                 ) : null
                                             )}
+                                            onDeleteComment={(commentId) => handleDeleteComment(commentId, post.postId)}
                                         />
                                         {/* 댓글/답글 작성 폼 (하단, 답글 모드 아닐 때만) */}
                                         {!(replyMode && replyMode.postId === post.postId) && (

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import CommentForm from './CommentForm';
 
-const CommentList = ({ comments = [], onReplyClick, replyMode, renderReplyForm }) => {
+const CommentList = ({ comments = [], onReplyClick, replyMode, renderReplyForm, onDeleteComment }) => {
   // 답글 입력창이 열려있는 댓글의 ID
   const [replyTo, setReplyTo] = useState(null);
 
@@ -73,6 +73,16 @@ const CommentList = ({ comments = [], onReplyClick, replyMode, renderReplyForm }
                     <span className="text-[12px] text-gray-500">
                       {formatTime(comment.createdAt)}
                     </span>
+                    {/* 삭제 버튼 */}
+                    {isMyComment && (
+                      <button
+                        type="button"
+                        className="ml-2 text-xs text-red-400 hover:text-red-600 font-medium"
+                        onClick={() => onDeleteComment && onDeleteComment(comment.commentId)}
+                      >
+                        삭제
+                      </button>
+                    )}
                   </div>
                   <p className="text-[14px] text-gray-600 break-words">
                     {comment.content}
@@ -129,6 +139,16 @@ const CommentList = ({ comments = [], onReplyClick, replyMode, renderReplyForm }
                             <span className="text-[12px] text-gray-500">
                               {formatTime(reply.createdAt)}
                             </span>
+                            {/* 답글 삭제 버튼 */}
+                            {isMyReply && (
+                              <button
+                                type="button"
+                                className="ml-2 text-xs text-red-400 hover:text-red-600 font-medium"
+                                onClick={() => onDeleteComment && onDeleteComment(reply.commentId)}
+                              >
+                                삭제
+                              </button>
+                            )}
                           </div>
                           <p className="text-[14px] text-gray-600 break-words">
                             {reply.content}
