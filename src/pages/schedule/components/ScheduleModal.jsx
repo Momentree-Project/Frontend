@@ -335,7 +335,7 @@ export function ScheduleModal({ isOpen, onClose, selectedDate }) {
                                     />
                                     {!isColorAvailable(newCategory.color) && newCategory.color && (
                                         <p className="mt-1 text-[12px] text-gray-600 bg-[#F5F5F5] p-2 rounded">
-                                            <span className="font-medium text-point">수정 모드:</span> 현재 "{findCategoryByColor(newCategory.color)?.name}" 카테고리의 색상입니다.
+                                            <span className="font-medium text-point">수정 모드:</span> 현재 "{findCategoryByColor(newCategory.color)?.name}" 카테고리의 색은 "{categoryColors.find(c => c.colorName === newCategory.color)?.displayName}"입니다.
                                             {isCategoryAddMode ? 
                                                 <span className="block mt-1 text-[11px]">이름을 입력하면 카테고리를 수정할 수 있습니다. 이름을 비워두면 삭제할 수 있습니다.</span>
                                                 : null
@@ -393,7 +393,12 @@ export function ScheduleModal({ isOpen, onClose, selectedDate }) {
                                                     className="w-4 h-4 rounded-full mr-2" 
                                                     style={{ backgroundColor: color.hex }}
                                                 ></span>
-                                                <span className="text-[12px]">{color.displayName}</span>
+                                                <span className="text-[12px]">
+                                                    {!isColorAvailable(color.colorName) 
+                                                        ? findCategoryByColor(color.colorName)?.name || color.displayName
+                                                        : color.displayName
+                                                    }
+                                                </span>
                                             </button>
                                         ))}
                                     </div>
