@@ -9,6 +9,7 @@ import EditPostModal from './components/EditPostModal';
 import CreatePostModal from './components/CreatePostModal';
 import CommentForm from '../../components/CommentForm';
 import CommentList from '../../components/CommentList';
+import { Layout } from '../../components/Layout';
 
 function Post() {
     const [isWriting, setIsWriting] = useState(false);
@@ -222,21 +223,56 @@ function Post() {
     if (loading) return <div className="text-center py-5 text-lg text-gray-600">로딩 중...</div>;
     if (error) return <div className="text-center py-5 text-lg text-red-500">{error}</div>;
 
+    // 헤더 우측 새 글 작성 버튼
+    const headerRightActions = (
+        <>
+            <button
+                onClick={() => setIsWriting(true)}
+                className="flex items-center space-x-1 px-3 py-2 text-sm text-white bg-point hover:bg-point/90 rounded-lg transition-colors"
+            >
+                <svg 
+                    className="w-4 h-4" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                >
+                    <path 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        strokeWidth={2} 
+                        d="M12 4v16m8-8H4" 
+                    />
+                </svg>
+                <span>글쓰기</span>
+            </button>
+            <button
+                onClick={() => {
+                    // 로그아웃 기능은 나중에 구현
+                    alert('로그아웃 기능은 아직 구현되지 않았습니다.');
+                }}
+                className="flex items-center justify-center w-10 h-10 text-point hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+            >
+                <svg 
+                    className="w-5 h-5" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                >
+                    <path 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        strokeWidth={2} 
+                        d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" 
+                    />
+                </svg>
+            </button>
+        </>
+    );
+
     return (
-        <div className="bg-mainbg min-h-screen font-noto">
-            <div className="flex flex-col w-full max-w-[420px] mx-auto">
-                {/* 헤더 */}
-                <div className="sticky top-0 z-10 bg-white shadow border-b border-gray-100 px-4 py-3 flex justify-between items-center">
-                    <h1 className="text-[18px] font-semibold text-point">Momentree</h1>
-                    {!isWriting && (
-                        <button
-                            onClick={() => setIsWriting(true)}
-                            className="bg-point hover:bg-point/90 text-white px-4 py-2 rounded-[8px] text-[14px] font-medium transition-colors"
-                        >
-                            새 글 작성
-                        </button>
-                    )}
-                </div>
+        <Layout headerRightActions={headerRightActions} customTopPadding="pt-16">
+            <div className="bg-mainbg min-h-screen font-noto">
+                <div className="flex flex-col w-full max-w-[420px] mx-auto">
 
                 {/* 모달 컴포넌트들 */}
                 <EditPostModal 
@@ -269,6 +305,8 @@ function Post() {
                     images={viewerImageUrls}
                     currentIndex={currentImageIndex}
                 />
+
+
 
                 {/* 게시글 목록 */}
                 <div className="flex-1 px-2 pt-2 pb-6">
@@ -485,6 +523,7 @@ function Post() {
                 </div>
             </div>
         </div>
+        </Layout>
     );
 }
 
