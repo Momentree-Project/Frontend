@@ -2,10 +2,9 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNotifications } from '../hooks/useNotifications';
 import logo from '../assets/images/logo.png';
 
-const Header = () => {
+const Header = ({ rightActions }) => {
     const {
         notifications,
-        isConnected,
         unreadCount,
         markAsRead,
         markAllAsRead,
@@ -48,7 +47,7 @@ const Header = () => {
     };
 
     return (
-        <div className="fixed top-0 left-0 right-0 flex justify-center z-40">
+        <div className="fixed top-0 left-0 right-0 flex justify-center z-10">
             <header className="w-full max-w-[600px] bg-white border-b border-gray-100 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
                 <div className="px-4 py-3">
                     <div className="flex items-center justify-between">
@@ -59,15 +58,6 @@ const Header = () => {
                                 alt="Momentree" 
                                 className="h-8"
                             />
-                            {/* SSE 연결 상태 표시 */}
-                            <div className="ml-2 flex items-center">
-                                <div 
-                                    className={`w-2 h-2 rounded-full ${
-                                        isConnected ? 'bg-green-500' : 'bg-red-500'
-                                    }`}
-                                    title={isConnected ? '연결됨' : '연결 끊김'}
-                                />
-                            </div>
                         </div>
 
                         {/* 가운데 알림 텍스트 */}
@@ -77,7 +67,7 @@ const Header = () => {
                                 className={`w-full text-center px-3 py-2 rounded-lg transition-colors relative ${
                                     notifications.length > 0 && !notifications[0]?.read
                                         ? 'text-point font-medium hover:bg-point/5'
-                                        : 'text-gray-600 hover:bg-gray-50'
+                                        : 'text-point hover:bg-point/5'
                                 }`}
                             >
                                 <div className="truncate text-sm">
@@ -96,7 +86,7 @@ const Header = () => {
 
                             {/* 알림 드롭다운 */}
                             {isNotificationOpen && (
-                                <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden z-50">
+                                <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden z-[100]">
                                     {/* 드롭다운 헤더 */}
                                     <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
                                         <h3 className="font-semibold text-gray-900">알림</h3>
@@ -169,30 +159,34 @@ const Header = () => {
                             )}
                         </div>
 
-                        {/* 우측 로그아웃 버튼 */}
-                        <div>
-                            <button
-                                onClick={() => {
-                                    // 로그아웃 기능은 나중에 구현
-                                    alert('로그아웃 기능은 아직 구현되지 않았습니다.');
-                                }}
-                                className="flex items-center space-x-1 px-3 py-2 text-sm text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                            >
-                                <svg 
-                                    className="w-4 h-4" 
-                                    fill="none" 
-                                    stroke="currentColor" 
-                                    viewBox="0 0 24 24"
+                        {/* 우측 액션 버튼들 */}
+                        <div className="flex items-center space-x-2">
+                            {rightActions ? (
+                                rightActions
+                            ) : (
+                                <button
+                                    onClick={() => {
+                                        // 로그아웃 기능은 나중에 구현
+                                        alert('로그아웃 기능은 아직 구현되지 않았습니다.');
+                                    }}
+                                    className="flex items-center space-x-1 px-3 py-2 text-sm text-point hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                                 >
-                                    <path 
-                                        strokeLinecap="round" 
-                                        strokeLinejoin="round" 
-                                        strokeWidth={2} 
-                                        d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" 
-                                    />
-                                </svg>
-                                <span>로그아웃</span>
-                            </button>
+                                    <svg 
+                                        className="w-4 h-4" 
+                                        fill="none" 
+                                        stroke="currentColor" 
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path 
+                                            strokeLinecap="round" 
+                                            strokeLinejoin="round" 
+                                            strokeWidth={2} 
+                                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" 
+                                        />
+                                    </svg>
+                                    <span>로그아웃</span>
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>
