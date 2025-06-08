@@ -5,11 +5,13 @@ import logo from '../assets/images/logo.png';
 const Header = ({ rightActions }) => {
     const {
         notifications,
-        unreadCount,
-        markAsRead,
-        markAllAsRead,
-        removeNotification,
-        clearAllNotifications
+        latestNotification,
+        hasMore,
+        isLoading,
+        fetchAllNotifications,
+        loadMoreNotifications,
+        markNotificationAsRead,
+        markAllNotificationsAsRead
     } = useNotifications();
 
     const [isNotificationOpen, setIsNotificationOpen] = useState(false);
@@ -31,7 +33,13 @@ const Header = ({ rightActions }) => {
 
     // 알림 드롭다운 토글
     const toggleNotification = () => {
-        setIsNotificationOpen(!isNotificationOpen);
+        const newState = !isNotificationOpen;
+        setIsNotificationOpen(newState);
+        
+        // 드롭다운이 열릴 때 전체 알림 조회
+        if (newState) {
+            fetchAllNotifications(0, false);
+        }
     };
 
     // 시간 포맷팅 함수
@@ -60,99 +68,104 @@ const Header = ({ rightActions }) => {
                             />
                         </div>
 
-                        {/* 가운데 알림 텍스트 */}
-                        <div className="flex-1 mx-4 relative" ref={notificationRef}>
+                        {/* 가운데 알림 영역 */}
+                        <div className="flex-1 mx-2 min-w-0 relative" ref={notificationRef}>
                             <button
                                 onClick={toggleNotification}
-                                className={`w-full text-center px-3 py-2 rounded-lg transition-colors relative ${
-                                    notifications.length > 0 && !notifications[0]?.read
-                                        ? 'text-point font-medium hover:bg-point/5'
-                                        : 'text-point hover:bg-point/5'
-                                }`}
+                                className="flex items-center justify-center w-full px-3 py-2 rounded-lg transition-colors relative hover:bg-gray-50"
                             >
-                                <div className="truncate text-sm">
-                                    {notifications.length > 0 
-                                        ? notifications[0].title
-                                        : '새로운 알림이 없습니다'
-                                    }
-                                </div>
-                                {/* 읽지 않은 알림 개수 표시 */}
-                                {unreadCount > 0 && (
-                                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-medium">
-                                        {unreadCount > 99 ? '99+' : unreadCount}
-                                    </span>
+                                {latestNotification ? (
+                                    <div className="flex items-center space-x-2 w-full">
+                                        <div className="flex-shrink-0">
+                                            <div className={`w-2 h-2 rounded-full ${
+                                                !latestNotification.isRead ? 'bg-point' : 'bg-gray-300'
+                                            }`}></div>
+                                        </div>
+                                        <div className="flex-1 text-left min-w-0">
+                                            <div className={`text-sm truncate ${
+                                                !latestNotification.isRead ? 'text-gray-900 font-medium' : 'text-gray-700'
+                                            }`}>
+                                                {latestNotification.content}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center space-x-2 text-gray-400">
+                                        <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
+                                        <span className="text-sm">알림이 없습니다</span>
+                                    </div>
                                 )}
                             </button>
 
                             {/* 알림 드롭다운 */}
                             {isNotificationOpen && (
-                                <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden z-[100]">
+                                <div className="fixed left-1/2 transform -translate-x-1/2 top-16 w-[90vw] max-w-md bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden z-[100]">
                                     {/* 드롭다운 헤더 */}
                                     <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
                                         <h3 className="font-semibold text-gray-900">알림</h3>
                                         <div className="flex items-center space-x-2">
-                                            {unreadCount > 0 && (
-                                                <button
-                                                    onClick={markAllAsRead}
-                                                    className="text-sm text-point hover:text-point/80"
-                                                >
-                                                    모두 읽음
-                                                </button>
-                                            )}
                                             <button
-                                                onClick={clearAllNotifications}
-                                                className="text-sm text-gray-500 hover:text-gray-700"
+                                                onClick={markAllNotificationsAsRead}
+                                                className="text-sm text-point hover:text-point/80"
                                             >
-                                                모두 삭제
+                                                모두 읽음
                                             </button>
                                         </div>
                                     </div>
 
                                     {/* 알림 목록 */}
                                     <div className="max-h-80 overflow-y-auto">
-                                        {notifications.length === 0 ? (
+                                        {isLoading && notifications.length === 0 ? (
+                                            <div className="px-4 py-8 text-center text-gray-500">
+                                                로딩 중...
+                                            </div>
+                                        ) : notifications.length === 0 ? (
                                             <div className="px-4 py-8 text-center text-gray-500">
                                                 알림이 없습니다
                                             </div>
                                         ) : (
-                                            notifications.map((notification) => (
-                                                <div
-                                                    key={notification.id}
-                                                    className={`px-4 py-3 border-b border-gray-50 hover:bg-gray-50 transition-colors ${
-                                                        !notification.read ? 'bg-blue-50' : ''
-                                                    }`}
-                                                >
-                                                    <div className="flex items-start justify-between">
-                                                        <div 
-                                                            className="flex-1 cursor-pointer"
-                                                            onClick={() => markAsRead(notification.id)}
-                                                        >
-                                                            <div className="flex items-center space-x-2">
-                                                                <h4 className={`text-sm font-medium ${
-                                                                    !notification.read ? 'text-gray-900' : 'text-gray-700'
-                                                                }`}>
-                                                                    {notification.title}
-                                                                </h4>
-                                                                {!notification.read && (
-                                                                    <div className="w-2 h-2 bg-blue-500 rounded-full" />
-                                                                )}
+                                            <>
+                                                {notifications.map((notification) => (
+                                                    <div
+                                                        key={notification.id}
+                                                        className={`px-4 py-3 border-b border-gray-50 hover:bg-gray-50 transition-colors cursor-pointer ${
+                                                            !notification.isRead ? 'bg-blue-50 border-l-4 border-l-point' : ''
+                                                        }`}
+                                                        onClick={() => markNotificationAsRead(notification.id)}
+                                                    >
+                                                        <div className="flex items-start justify-between">
+                                                            <div className="flex-1">
+                                                                <div className="flex items-center space-x-2">
+                                                                    <p className={`text-sm ${
+                                                                        !notification.isRead ? 'text-gray-900 font-medium' : 'text-gray-700'
+                                                                    }`}>
+                                                                        {notification.content}
+                                                                    </p>
+                                                                    {!notification.isRead && (
+                                                                        <div className="w-2 h-2 bg-point rounded-full flex-shrink-0"></div>
+                                                                    )}
+                                                                </div>
+                                                                <p className="text-xs text-gray-400 mt-1">
+                                                                    {formatTime(notification.createdAt)}
+                                                                </p>
                                                             </div>
-                                                            <p className="text-xs text-gray-600 mt-1">
-                                                                {notification.message}
-                                                            </p>
-                                                            <p className="text-xs text-gray-400 mt-1">
-                                                                {formatTime(notification.timestamp)}
-                                                            </p>
                                                         </div>
+                                                    </div>
+                                                ))}
+                                                
+                                                {/* 더보기 버튼 */}
+                                                {hasMore && (
+                                                    <div className="px-4 py-3 border-t border-gray-100">
                                                         <button
-                                                            onClick={() => removeNotification(notification.id)}
-                                                            className="text-gray-400 hover:text-gray-600 ml-2"
+                                                            onClick={loadMoreNotifications}
+                                                            disabled={isLoading}
+                                                            className="w-full text-center text-sm text-point hover:text-point/80 disabled:opacity-50"
                                                         >
-                                                            ×
+                                                            {isLoading ? '로딩 중...' : '더 보기'}
                                                         </button>
                                                     </div>
-                                                </div>
-                                            ))
+                                                )}
+                                            </>
                                         )}
                                     </div>
                                 </div>

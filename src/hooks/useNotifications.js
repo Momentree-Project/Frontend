@@ -1,10 +1,115 @@
 import { useState, useEffect, useRef } from 'react';
+import api from '../api/axiosInstance';
 
 export const useNotifications = () => {
     const [notifications, setNotifications] = useState([]);
+    const [latestNotification, setLatestNotification] = useState(null);
     const [isConnected, setIsConnected] = useState(false);
-    const [unreadCount, setUnreadCount] = useState(0);
+
+    const [currentPage, setCurrentPage] = useState(0);
+    const [hasMore, setHasMore] = useState(true);
+    const [isLoading, setIsLoading] = useState(false);
     const eventSourceRef = useRef(null);
+
+    // 최신 알림 조회
+    const fetchLatestNotification = async () => {
+        try {
+            const response = await api.get('/api/v1/notifications/latest');
+            if (response.data.code === 200) {
+                setLatestNotification(response.data.data);
+            }
+        } catch (error) {
+            if (error.response?.status === 404) {
+                setLatestNotification(null);
+            } else {
+                console.error('📋 최신 알림 조회 실패:', error);
+            }
+        }
+    };
+
+    // 전체 알림 조회 (페이징)
+    const fetchAllNotifications = async (page = 0, append = false) => {
+        if (isLoading) return;
+        
+        setIsLoading(true);
+        try {
+            const response = await api.get(`/api/v1/notifications?page=${page}&size=5`);
+            if (response.data.code === 200) {
+                const pageData = response.data.data;
+                
+                if (append && page > 0) {
+                    // 추가 로드 (더보기)
+                    setNotifications(prev => [...prev, ...pageData.content]);
+                } else {
+                    // 첫 로드
+                    setNotifications(pageData.content);
+                }
+                
+                setCurrentPage(page);
+                setHasMore(!pageData.last);
+            }
+        } catch (error) {
+            console.error('📋 전체 알림 조회 실패:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // 더 많은 알림 로드
+    const loadMoreNotifications = () => {
+        if (hasMore && !isLoading) {
+            fetchAllNotifications(currentPage + 1, true);
+        }
+    };
+
+    // 알림 읽음 처리
+    const markNotificationAsRead = async (notificationId) => {
+        try {
+            const response = await api.patch(`/api/v1/notifications/${notificationId}`);
+            if (response.data.code === 200) {
+                
+                // 로컬 상태 업데이트
+                setNotifications(prev => 
+                    prev.map(notification => 
+                        notification.id === notificationId 
+                            ? { ...notification, isRead: true }
+                            : notification
+                    )
+                );
+                
+                // 최신 알림도 업데이트
+                if (latestNotification && latestNotification.id === notificationId) {
+                    setLatestNotification(prev => ({ ...prev, isRead: true }));
+                }
+            }
+        } catch (error) {
+            console.error('📖 알림 읽음 처리 실패:', error);
+        }
+    };
+
+    // 모든 알림 읽음 처리
+    const markAllNotificationsAsRead = async () => {
+        try {
+            const response = await api.patch('/api/v1/notifications?page=0&size=5');
+            if (response.data.code === 200) {
+                
+                // 로컬 상태 업데이트 - 모든 알림을 읽음 상태로 변경
+                setNotifications(prev => 
+                    prev.map(notification => ({ ...notification, isRead: true }))
+                );
+                
+                // 최신 알림도 읽음 상태로 업데이트
+                if (latestNotification) {
+                    setLatestNotification(prev => ({ ...prev, isRead: true }));
+                }
+                
+                // 전체 알림 목록 새로고침
+                fetchAllNotifications(0, false);
+            }
+        } catch (error) {
+            console.error('📖 모든 알림 읽음 처리 실패:', error);
+        }
+    };
 
     // SSE 연결 설정
     useEffect(() => {
@@ -14,7 +119,7 @@ export const useNotifications = () => {
                 const backendUrl = import.meta.env.VITE_CORE_API_BASE_URL;
                 
                 // 인증이 permitAll()로 설정되어 있으므로 withCredentials 불필요
-                const eventSource = new EventSource(`${backendUrl}/api/v1/notifications`);
+                const eventSource = new EventSource(`${backendUrl}/api/v1/notifications/connects`);
                 eventSourceRef.current = eventSource;
 
                 // 연결 성공 이벤트 처리
@@ -69,6 +174,7 @@ export const useNotifications = () => {
         };
 
         connectSSE();
+        fetchLatestNotification(); // 초기 최신 알림 조회
 
         // 컴포넌트 언마운트 시 연결 해제
         return () => {
@@ -82,53 +188,21 @@ export const useNotifications = () => {
     // 새 알림 추가
     const addNotification = (notification) => {
         setNotifications(prev => [notification, ...prev]);
-        setUnreadCount(prev => prev + 1);
     };
 
-    // 알림 읽음 처리
-    const markAsRead = (notificationId) => {
-        setNotifications(prev => 
-            prev.map(notification => 
-                notification.id === notificationId 
-                    ? { ...notification, read: true }
-                    : notification
-            )
-        );
-        setUnreadCount(prev => Math.max(0, prev - 1));
-    };
 
-    // 모든 알림 읽음 처리
-    const markAllAsRead = () => {
-        setNotifications(prev => 
-            prev.map(notification => ({ ...notification, read: true }))
-        );
-        setUnreadCount(0);
-    };
-
-    // 알림 삭제
-    const removeNotification = (notificationId) => {
-        setNotifications(prev => {
-            const notification = prev.find(n => n.id === notificationId);
-            if (notification && !notification.read) {
-                setUnreadCount(count => Math.max(0, count - 1));
-            }
-            return prev.filter(n => n.id !== notificationId);
-        });
-    };
-
-    // 모든 알림 삭제
-    const clearAllNotifications = () => {
-        setNotifications([]);
-        setUnreadCount(0);
-    };
 
     return {
         notifications,
+        latestNotification,
         isConnected,
-        unreadCount,
-        markAsRead,
-        markAllAsRead,
-        removeNotification,
-        clearAllNotifications
+        currentPage,
+        hasMore,
+        isLoading,
+        fetchLatestNotification,
+        fetchAllNotifications,
+        loadMoreNotifications,
+        markNotificationAsRead,
+        markAllNotificationsAsRead
     };
 }; 
