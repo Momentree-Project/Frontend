@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { usePost } from './hooks/usePost';
 import api from '../../api/axiosInstance';
 
@@ -9,12 +10,15 @@ import EditPostModal from './components/EditPostModal';
 import CreatePostModal from './components/CreatePostModal';
 import CommentForm from '../../components/CommentForm';
 import CommentList from '../../components/CommentList';
+import { Layout } from '../../components/Layout';
 
 function Post() {
+    const [searchParams, setSearchParams] = useSearchParams();
     const [isWriting, setIsWriting] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [selectedPost, setSelectedPost] = useState(null);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [highlightPostId, setHighlightPostId] = useState(null);
     
     // 이미지 뷰어 관련 상태
     const [isImageViewerOpen, setIsImageViewerOpen] = useState(false);
@@ -31,6 +35,56 @@ function Post() {
 
     // 로그인한 사용자 정보 가져오기
     const loginUserInfo = JSON.parse(localStorage.getItem('loginUserInfo') || '{}');
+
+    // URL 파라미터로 전달된 게시글 하이라이트 처리
+    useEffect(() => {
+        const highlightId = searchParams.get('highlight');
+        const openComments = searchParams.get('openComments');
+        
+        if (highlightId && posts.length > 0) {
+            setHighlightPostId(parseInt(highlightId));
+            
+            // 댓글창 자동 열기가 요청된 경우
+            if (openComments === 'true') {
+                const postId = parseInt(highlightId);
+                setShowComments(prev => ({
+                    ...prev,
+                    [postId]: true
+                }));
+                
+                // 댓글이 아직 로드되지 않았다면 로드
+                if (!comments[postId]) {
+                    getComments(postId).then(commentsData => {
+                        setComments(prev => ({
+                            ...prev,
+                            [postId]: commentsData
+                        }));
+                    }).catch(error => {
+                        console.error('댓글 불러오기 실패:', error);
+                    });
+                }
+            }
+            
+            // 해당 게시글로 스크롤
+            setTimeout(() => {
+                const element = document.getElementById(`post-${highlightId}`);
+                if (element) {
+                    element.scrollIntoView({ 
+                        behavior: 'smooth', 
+                        block: 'center' 
+                    });
+                    
+                    // URL에서 파라미터 제거
+                    setSearchParams(new URLSearchParams());
+                    
+                    // 3초 후 하이라이트 제거
+                    setTimeout(() => {
+                        setHighlightPostId(null);
+                    }, 3000);
+                }
+            }, 500);
+        }
+    }, [posts, searchParams, setSearchParams]);
 
     const handleCreatePost = (postData) => {
         createPost(postData).then(success => {
@@ -222,21 +276,56 @@ function Post() {
     if (loading) return <div className="text-center py-5 text-lg text-gray-600">로딩 중...</div>;
     if (error) return <div className="text-center py-5 text-lg text-red-500">{error}</div>;
 
+    // 헤더 우측 새 글 작성 버튼
+    const headerRightActions = (
+        <>
+            <button
+                onClick={() => setIsWriting(true)}
+                className="flex items-center space-x-1 px-3 py-2 text-sm text-white bg-point hover:bg-point/90 rounded-lg transition-colors"
+            >
+                <svg 
+                    className="w-4 h-4" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                >
+                    <path 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        strokeWidth={2} 
+                        d="M12 4v16m8-8H4" 
+                    />
+                </svg>
+                <span>글쓰기</span>
+            </button>
+            <button
+                onClick={() => {
+                    // 로그아웃 기능은 나중에 구현
+                    alert('로그아웃 기능은 아직 구현되지 않았습니다.');
+                }}
+                className="flex items-center justify-center w-10 h-10 text-point hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+            >
+                <svg 
+                    className="w-5 h-5" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                >
+                    <path 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        strokeWidth={2} 
+                        d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" 
+                    />
+                </svg>
+            </button>
+        </>
+    );
+
     return (
-        <div className="bg-mainbg min-h-screen font-noto">
-            <div className="flex flex-col w-full max-w-[420px] mx-auto">
-                {/* 헤더 */}
-                <div className="sticky top-0 z-10 bg-white shadow border-b border-gray-100 px-4 py-3 flex justify-between items-center">
-                    <h1 className="text-[18px] font-semibold text-point">Momentree</h1>
-                    {!isWriting && (
-                        <button
-                            onClick={() => setIsWriting(true)}
-                            className="bg-point hover:bg-point/90 text-white px-4 py-2 rounded-[8px] text-[14px] font-medium transition-colors"
-                        >
-                            새 글 작성
-                        </button>
-                    )}
-                </div>
+        <Layout headerRightActions={headerRightActions} customTopPadding="pt-16">
+            <div className="bg-mainbg min-h-screen font-noto">
+                <div className="flex flex-col w-full max-w-[420px] mx-auto">
 
                 {/* 모달 컴포넌트들 */}
                 <EditPostModal 
@@ -270,6 +359,8 @@ function Post() {
                     currentIndex={currentImageIndex}
                 />
 
+
+
                 {/* 게시글 목록 */}
                 <div className="flex-1 px-2 pt-2 pb-6">
                     {posts.map((post) => {
@@ -277,8 +368,13 @@ function Post() {
                         
                         return (
                             <article 
-                                key={post.postId} 
-                                className="bg-white rounded-[16px] shadow-sm mb-4 border border-gray-100"
+                                key={post.postId}
+                                id={`post-${post.postId}`}
+                                className={`bg-white rounded-[16px] shadow-sm mb-4 border transition-all duration-1000 ${
+                                    highlightPostId === post.postId 
+                                        ? 'border-point shadow-md ring-2 ring-point/20' 
+                                        : 'border-gray-100'
+                                }`}
                             >
                                 {/* 게시글 헤더 */}
                                 <div className="p-4 flex items-center gap-3">
@@ -484,7 +580,10 @@ function Post() {
                     })}
                 </div>
             </div>
+
+
         </div>
+        </Layout>
     );
 }
 

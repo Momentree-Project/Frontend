@@ -1,4 +1,21 @@
-export function ScheduleList({ scheduleList, onAddClick, onItemClick, onEditClick, onDeleteClick }) {
+import { useEffect, useRef } from 'react';
+
+export function ScheduleList({ scheduleList, onAddClick, onItemClick, onEditClick, onDeleteClick, highlightScheduleId }) {
+    const highlightRef = useRef(null);
+
+    // 하이라이트된 일정으로 스크롤
+    useEffect(() => {
+        if (highlightScheduleId && highlightRef.current) {
+            // 약간의 지연을 주어 DOM 업데이트 후 스크롤
+            setTimeout(() => {
+                highlightRef.current?.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'center' 
+                });
+            }, 300);
+        }
+    }, [highlightScheduleId]);
+
     return (
         <>
             <div className="flex justify-between items-center mb-3">
@@ -8,8 +25,11 @@ export function ScheduleList({ scheduleList, onAddClick, onItemClick, onEditClic
                 {scheduleList.map((item, idx) => (
                     <li
                         key={idx}
+                        ref={highlightScheduleId === item.id ? highlightRef : null}
                         onClick={() => onItemClick(item.id)}
-                        className="bg-white rounded-[10px] px-[14px] py-[12px] mb-[8px] flex justify-between items-center text-point text-[16px] font-medium shadow-[0_1px_4px_#eaece3] cursor-pointer"
+                        className={`bg-white rounded-[10px] px-[14px] py-[12px] mb-[8px] flex justify-between items-center text-point text-[16px] font-medium shadow-[0_1px_4px_#eaece3] cursor-pointer transition-all ${
+                            highlightScheduleId === item.id ? 'border-2 border-point shadow-lg ring-2 ring-point/30' : ''
+                        }`}
                     >
                         <span>{item.title}</span>
                         <div className="flex items-center gap-2">

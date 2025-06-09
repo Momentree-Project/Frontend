@@ -31,9 +31,7 @@ function App() {
           </Layout>
         } />
         <Route path="/posts" element={
-          <Layout>
-            <Post />
-          </Layout>
+          <Post />
         } />
 
         {/* 레이아웃이 필요없는 페이지 */}
