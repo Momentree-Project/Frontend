@@ -57,8 +57,13 @@ const Header = ({ rightActions }) => {
     };
 
     // 알림 이동 처리
-    const handleNotificationNavigate = (redirectUrl, notificationContent) => {
+    const handleNotificationNavigate = (redirectUrl, notificationContent, notificationId) => {
         setIsNotificationOpen(false); // 드롭다운 닫기
+        
+        // 알림을 읽음 상태로 변경
+        if (notificationId) {
+            markNotificationAsRead(notificationId);
+        }
         
         // 댓글 관련 알림인지 확인
         const isCommentRelated = notificationContent && (
@@ -191,7 +196,7 @@ const Header = ({ rightActions }) => {
                                                                 <button
                                                                     onClick={(e) => {
                                                                         e.stopPropagation();
-                                                                        handleNotificationNavigate(notification.redirectUrl, notification.content);
+                                                                        handleNotificationNavigate(notification.redirectUrl, notification.content, notification.id);
                                                                     }}
                                                                     className="px-2 py-1 text-xs bg-point text-white rounded hover:bg-point/90 transition-colors"
                                                                 >
