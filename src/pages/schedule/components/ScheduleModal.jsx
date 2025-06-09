@@ -49,7 +49,7 @@ export function ScheduleModal({ isOpen, onClose, selectedDate }) {
         if (isOpen) {
             refreshCategories(); // 모달이 열릴 때 카테고리 목록 새로고침
         }
-    }, [isOpen, refreshCategories]);
+    }, [isOpen]);
 
     useEffect(() => {
         if (selectedDate) {

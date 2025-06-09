@@ -1,8 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useNotifications } from '../hooks/useNotifications';
 import logo from '../assets/images/logo.png';
 
 const Header = ({ rightActions }) => {
+    const navigate = useNavigate();
     const {
         notifications,
         latestNotification,
@@ -52,6 +54,39 @@ const Header = ({ rightActions }) => {
         if (diff < 3600000) return `${Math.floor(diff / 60000)}분 전`;
         if (diff < 86400000) return `${Math.floor(diff / 3600000)}시간 전`;
         return time.toLocaleDateString();
+    };
+
+    // 알림 이동 처리
+    const handleNotificationNavigate = (redirectUrl, notificationContent) => {
+        setIsNotificationOpen(false); // 드롭다운 닫기
+        
+        // 댓글 관련 알림인지 확인
+        const isCommentRelated = notificationContent && (
+            notificationContent.includes('댓글') || 
+            notificationContent.includes('답글') ||
+            notificationContent.includes('comment') ||
+            notificationContent.includes('reply')
+        );
+        
+        // /posts/{postId} 형식에서 postId 추출
+        const postIdMatch = redirectUrl.match(/\/posts\/(\d+)/);
+        if (postIdMatch) {
+            const postId = postIdMatch[1];
+            const commentParam = isCommentRelated ? '&openComments=true' : '';
+            navigate(`/posts?highlight=${postId}${commentParam}`);
+            return;
+        }
+        
+        // /schedules/{scheduleId} 형식에서 scheduleId 추출
+        const scheduleIdMatch = redirectUrl.match(/\/schedules\/(\d+)/);
+        if (scheduleIdMatch) {
+            const scheduleId = scheduleIdMatch[1];
+            navigate(`/schedule?highlight=${scheduleId}`);
+            return;
+        }
+        
+        // 기본적으로 원래 URL로 이동
+        navigate(redirectUrl);
     };
 
     return (
@@ -128,13 +163,15 @@ const Header = ({ rightActions }) => {
                                                 {notifications.map((notification) => (
                                                     <div
                                                         key={notification.id}
-                                                        className={`px-4 py-3 border-b border-gray-50 hover:bg-gray-50 transition-colors cursor-pointer ${
+                                                        className={`px-4 py-3 border-b border-gray-50 hover:bg-gray-50 transition-colors ${
                                                             !notification.isRead ? 'bg-blue-50 border-l-4 border-l-point' : ''
                                                         }`}
-                                                        onClick={() => markNotificationAsRead(notification.id)}
                                                     >
                                                         <div className="flex items-start justify-between">
-                                                            <div className="flex-1">
+                                                            <div 
+                                                                className="flex-1 cursor-pointer" 
+                                                                onClick={() => markNotificationAsRead(notification.id)}
+                                                            >
                                                                 <div className="flex items-center space-x-2">
                                                                     <p className={`text-sm ${
                                                                         !notification.isRead ? 'text-gray-900 font-medium' : 'text-gray-700'
@@ -148,6 +185,18 @@ const Header = ({ rightActions }) => {
                                                                 <p className="text-xs text-gray-400 mt-1">
                                                                     {formatTime(notification.createdAt)}
                                                                 </p>
+                                                            </div>
+                                                            {/* 이동 버튼 */}
+                                                            <div className="flex flex-col space-y-1 ml-2">
+                                                                <button
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        handleNotificationNavigate(notification.redirectUrl, notification.content);
+                                                                    }}
+                                                                    className="px-2 py-1 text-xs bg-point text-white rounded hover:bg-point/90 transition-colors"
+                                                                >
+                                                                    이동
+                                                                </button>
                                                             </div>
                                                         </div>
                                                     </div>

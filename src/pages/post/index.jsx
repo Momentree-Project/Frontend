@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { usePost } from './hooks/usePost';
 import api from '../../api/axiosInstance';
 
@@ -12,10 +13,12 @@ import CommentList from '../../components/CommentList';
 import { Layout } from '../../components/Layout';
 
 function Post() {
+    const [searchParams, setSearchParams] = useSearchParams();
     const [isWriting, setIsWriting] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [selectedPost, setSelectedPost] = useState(null);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [highlightPostId, setHighlightPostId] = useState(null);
     
     // 이미지 뷰어 관련 상태
     const [isImageViewerOpen, setIsImageViewerOpen] = useState(false);
@@ -32,6 +35,56 @@ function Post() {
 
     // 로그인한 사용자 정보 가져오기
     const loginUserInfo = JSON.parse(localStorage.getItem('loginUserInfo') || '{}');
+
+    // URL 파라미터로 전달된 게시글 하이라이트 처리
+    useEffect(() => {
+        const highlightId = searchParams.get('highlight');
+        const openComments = searchParams.get('openComments');
+        
+        if (highlightId && posts.length > 0) {
+            setHighlightPostId(parseInt(highlightId));
+            
+            // 댓글창 자동 열기가 요청된 경우
+            if (openComments === 'true') {
+                const postId = parseInt(highlightId);
+                setShowComments(prev => ({
+                    ...prev,
+                    [postId]: true
+                }));
+                
+                // 댓글이 아직 로드되지 않았다면 로드
+                if (!comments[postId]) {
+                    getComments(postId).then(commentsData => {
+                        setComments(prev => ({
+                            ...prev,
+                            [postId]: commentsData
+                        }));
+                    }).catch(error => {
+                        console.error('댓글 불러오기 실패:', error);
+                    });
+                }
+            }
+            
+            // 해당 게시글로 스크롤
+            setTimeout(() => {
+                const element = document.getElementById(`post-${highlightId}`);
+                if (element) {
+                    element.scrollIntoView({ 
+                        behavior: 'smooth', 
+                        block: 'center' 
+                    });
+                    
+                    // URL에서 파라미터 제거
+                    setSearchParams(new URLSearchParams());
+                    
+                    // 3초 후 하이라이트 제거
+                    setTimeout(() => {
+                        setHighlightPostId(null);
+                    }, 3000);
+                }
+            }, 500);
+        }
+    }, [posts, searchParams, setSearchParams]);
 
     const handleCreatePost = (postData) => {
         createPost(postData).then(success => {
@@ -315,8 +368,13 @@ function Post() {
                         
                         return (
                             <article 
-                                key={post.postId} 
-                                className="bg-white rounded-[16px] shadow-sm mb-4 border border-gray-100"
+                                key={post.postId}
+                                id={`post-${post.postId}`}
+                                className={`bg-white rounded-[16px] shadow-sm mb-4 border transition-all duration-1000 ${
+                                    highlightPostId === post.postId 
+                                        ? 'border-point shadow-md ring-2 ring-point/20' 
+                                        : 'border-gray-100'
+                                }`}
                             >
                                 {/* 게시글 헤더 */}
                                 <div className="p-4 flex items-center gap-3">
@@ -522,6 +580,8 @@ function Post() {
                     })}
                 </div>
             </div>
+
+
         </div>
         </Layout>
     );
