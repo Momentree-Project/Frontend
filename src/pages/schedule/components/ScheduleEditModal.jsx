@@ -302,7 +302,7 @@ export function ScheduleEditModal({ isOpen, onClose, schedule, selectedDate }) {
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-[22px] p-6 w-full max-w-[380px] max-h-[90vh] overflow-y-auto">
+            <div className="bg-white rounded-[16px] p-5 w-[90%] max-w-[500px] max-h-[90vh] overflow-y-auto">
                 <div className="flex justify-between items-center mb-4">
                     <h3 className="text-[20px] font-bold text-point">일정 수정</h3>
                     <button onClick={onClose} className="text-gray-500">
@@ -357,7 +357,7 @@ export function ScheduleEditModal({ isOpen, onClose, schedule, selectedDate }) {
                                     />
                                     {!isColorAvailable(newCategory.color) && newCategory.color && (
                                         <p className="mt-1 text-[12px] text-gray-600 bg-[#F5F5F5] p-2 rounded">
-                                            <span className="font-medium text-point">수정 모드:</span> 현재 "{findCategoryByColor(newCategory.color)?.name}" 카테고리의 색상입니다.
+                                            <span className="font-medium text-point">수정 모드:</span> 현재 "{findCategoryByColor(newCategory.color)?.name}" 카테고리의 색은 "{categoryColors.find(c => c.colorName === newCategory.color)?.displayName}"입니다.
                                             {isCategoryAddMode ? 
                                                 <span className="block mt-1 text-[11px]">이름을 입력하면 카테고리를 수정할 수 있습니다. 이름을 비워두면 삭제할 수 있습니다.</span>
                                                 : null
@@ -415,7 +415,12 @@ export function ScheduleEditModal({ isOpen, onClose, schedule, selectedDate }) {
                                                     className="w-4 h-4 rounded-full mr-2" 
                                                     style={{ backgroundColor: color.hex }}
                                                 ></span>
-                                                <span className="text-[12px]">{color.displayName}</span>
+                                                <span className="text-[12px]">
+                                                    {!isColorAvailable(color.colorName) 
+                                                        ? findCategoryByColor(color.colorName)?.name || color.displayName
+                                                        : color.displayName
+                                                    }
+                                                </span>
                                             </button>
                                         ))}
                                     </div>
