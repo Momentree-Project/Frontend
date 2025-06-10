@@ -198,7 +198,12 @@ function Post() {
 
     // 시간 포맷팅 함수
     const formatTime = (dateString) => {
-        const date = new Date(dateString);
+        // 타임존 정보가 없으면 UTC(Z)를 추가
+        const isoString = dateString.includes('T') && !dateString.includes('Z') && !dateString.includes('+')
+            ? dateString + 'Z'  // UTC로 명시
+            : dateString;
+        
+        const date = new Date(isoString);
         const now = new Date();
         const diffInSeconds = Math.floor((now - date) / 1000);
 
