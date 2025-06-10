@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import api from '../../../api/axiosInstance';
 
 // 날짜 포맷팅 유틸 함수
@@ -34,7 +34,7 @@ export function useSchedule() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [selectedDate, setSelectedDate] = useState(new Date());
-    const selectedDateStr = formatDate(selectedDate);
+    const selectedDateStr = useMemo(() => formatDate(selectedDate), [selectedDate]);
     const [refreshTrigger, setRefreshTrigger] = useState(0); // 새로고침 트리거
     
     // 카테고리 관련 상태
@@ -161,7 +161,7 @@ export function useSchedule() {
     }, [categories]);
 
     // 색상이 사용 가능한지 확인하는 함수
-    const isColorAvailable = useCallback((colorName) => {
+    const isColorAvailable = (colorName) => {
         if (!colorName) return false;
         
         // 대소문자 통일을 위해 모두 대문자로 변환
@@ -169,17 +169,17 @@ export function useSchedule() {
         const normalizedUsedColors = usedColors.map(color => color.toUpperCase());
         
         return !normalizedUsedColors.includes(normalizedColorName);
-    }, [usedColors]);
+    };
 
     // 사용 가능한 첫 번째 색상 찾기
-    const findFirstAvailableColor = useCallback(() => {
+    const findFirstAvailableColor = () => {
         for (const color of Object.keys(categoryColorMap)) {
             if (isColorAvailable(color)) {
                 return color;
             }
         }
         return null; // 모든 색상이 사용 중인 경우
-    }, [isColorAvailable]);
+    };
 
     // 카테고리 색상 Hex 코드 가져오기
     const getCategoryColorHex = useCallback((colorName) => {
@@ -286,36 +286,54 @@ export function useSchedule() {
     }, []);
 
     // 선택한 날짜가 일정 기간에 포함되는지 확인하는 함수
-    const isDateInScheduleRange = (date, schedule) => {
+    const isDateInScheduleRange = useCallback((date, schedule) => {
+        // startTime이 없으면 false 반환
+        if (!schedule.startTime) {
+            return false;
+        }
+
+        // endTime이 없거나 null인 경우 (하루 일정)
         if (!schedule.endTime) {
-            return formatDate(new Date(schedule.startTime)) === formatDate(date);
+            const startDate = new Date(schedule.startTime);
+            if (isNaN(startDate.getTime())) {
+                return false; // 유효하지 않은 날짜
+            }
+            return formatDate(startDate) === formatDate(date);
         }
 
         const checkDate = new Date(date);
         checkDate.setHours(0, 0, 0, 0);
 
         const startDate = new Date(schedule.startTime);
-        startDate.setHours(0, 0, 0, 0);
-
         const endDate = new Date(schedule.endTime);
+
+        // 유효하지 않은 날짜 체크
+        if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+            return false;
+        }
+
+        startDate.setHours(0, 0, 0, 0);
         endDate.setHours(0, 0, 0, 0);
 
         return checkDate >= startDate && checkDate <= endDate;
-    };
+    }, []);
 
     // 선택된 날짜의 일정 (여러 날짜에 걸친 일정 포함)
-    const todaySchedule = schedules.find(schedule => 
-        isDateInScheduleRange(selectedDate, schedule)
+    const todaySchedule = useMemo(() => 
+        schedules.find(schedule => 
+            isDateInScheduleRange(selectedDate, schedule)
+        ), [schedules, selectedDate, isDateInScheduleRange]
     );
 
     // 선택된 날짜의 일정 목록 (여러 날짜에 걸친 일정 포함)
-    const scheduleList = schedules.filter(schedule => 
-        isDateInScheduleRange(selectedDate, schedule)
+    const scheduleList = useMemo(() => 
+        schedules.filter(schedule => 
+            isDateInScheduleRange(selectedDate, schedule)
+        ), [schedules, selectedDate, isDateInScheduleRange]
     );
 
     // 날짜에 일정이 있는지 확인하는 함수
-    const hasScheduleOnDate = (date) => {
-        const dateStr = formatDate(date);
+    const hasScheduleOnDate = useCallback((date) => {
         const result = {
             hasSingleDay: false,
             multiDaySchedules: []
@@ -323,17 +341,34 @@ export function useSchedule() {
 
         for (const schedule of schedules) {
             if (isDateInScheduleRange(date, schedule)) {
+                // startTime이 유효하지 않으면 건너뛰기
+                if (!schedule.startTime) {
+                    continue;
+                }
+
+                const startDate = new Date(schedule.startTime);
+                if (isNaN(startDate.getTime())) {
+                    continue; // 유효하지 않은 날짜
+                }
+
                 // 하루짜리 일정인지 또는 여러 날에 걸친 일정인지 확인
-                if (!schedule.endTime || formatDate(new Date(schedule.startTime)) === formatDate(new Date(schedule.endTime))) {
+                if (!schedule.endTime) {
                     result.hasSingleDay = true;
                 } else {
-                    result.multiDaySchedules.push(schedule.id);
+                    const endDate = new Date(schedule.endTime);
+                    if (isNaN(endDate.getTime())) {
+                        result.hasSingleDay = true; // endTime이 유효하지 않으면 하루 일정으로 처리
+                    } else if (formatDate(startDate) === formatDate(endDate)) {
+                        result.hasSingleDay = true;
+                    } else {
+                        result.multiDaySchedules.push(schedule.id);
+                    }
                 }
             }
         }
 
         return result;
-    };
+    }, [schedules, isDateInScheduleRange]);
 
     const calculateAnniversaries = useCallback(() => {
         const loginUserInfo = JSON.parse(localStorage.getItem('loginUserInfo'));

@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useSchedule } from "./hooks/useSchedule";
 import { ScheduleHeader } from "./components/ScheduleHeader";
 import { ScheduleCalendar } from "./components/ScheduleCalendar";
@@ -9,6 +10,7 @@ import { ScheduleEditModal } from "./components/ScheduleEditModal";
 import "./style.css";
 
 function Schedule() {
+    const [searchParams, setSearchParams] = useSearchParams();
     const {
         selectedDate,
         setSelectedDate,
@@ -31,6 +33,7 @@ function Schedule() {
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [selectedSchedule, setSelectedSchedule] = useState(null);
+    const [highlightScheduleId, setHighlightScheduleId] = useState(null);
 
     const handleAddClick = () => {
         setIsModalOpen(true);
@@ -84,9 +87,55 @@ function Schedule() {
         setIsEditModalOpen(false);
     };
 
+    // URL 파라미터 처리 (통합)
+    useEffect(() => {
+        const scheduleIdParam = searchParams.get('highlight');
+        const dateParam = searchParams.get('date');
+        
+        // 로딩 중이면 대기
+        if (loading) return;
+        
+        if (scheduleIdParam) {
+            const scheduleId = parseInt(scheduleIdParam);
+            
+            // 스케줄이 로드되었고 해당 스케줄을 찾을 수 있으면
+            if (schedules.length > 0) {
+                const targetSchedule = schedules.find(schedule => 
+                    schedule.id === scheduleId || String(schedule.id) === String(scheduleId)
+                );
+                
+                if (targetSchedule) {
+                    // 일정의 시작 날짜로 이동
+                    const scheduleDate = new Date(targetSchedule.startTime);
+                    setSelectedDate(scheduleDate);
+                    setHighlightScheduleId(scheduleId);
+                    
+                    // 5초 후 하이라이트 제거
+                    setTimeout(() => {
+                        setHighlightScheduleId(null);
+                    }, 5000);
+                }
+                
+                // URL에서 파라미터 제거
+                setSearchParams(new URLSearchParams());
+            }
+        } else if (dateParam) {
+            // 날짜만 전달된 경우
+            const targetDate = new Date(dateParam);
+            if (!isNaN(targetDate.getTime())) {
+                setSelectedDate(targetDate);
+                setSearchParams(new URLSearchParams());
+            }
+        }
+    }, [searchParams, schedules, loading]);
+
     // 로딩 상태 처리
-    if (loading) return <div>로딩 중...</div>;
-    if (error) return <div>에러: {error}</div>;
+    if (loading) {
+        return <div className="p-4 text-center">로딩 중...</div>;
+    }
+    if (error) {
+        return <div className="p-4 text-center text-red-500">에러: {error}</div>;
+    }
 
     return (
         <div className="bg-mainbg min-h-screen font-noto">
@@ -128,6 +177,7 @@ function Schedule() {
                         onItemClick={handleItemClick}
                         onEditClick={handleEditClick}
                         onDeleteClick={handleDeleteClick}
+                        highlightScheduleId={highlightScheduleId}
                     />
                 </section>
 

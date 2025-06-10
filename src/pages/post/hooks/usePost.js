@@ -15,8 +15,15 @@ export function usePost() {
             const response = await api.get('/api/v1/posts');
             const postsData = response.data.data || [];
             
+            // 최신순으로 정렬 (createdAt 기준 내림차순)
+            const sortedPosts = postsData.sort((a, b) => {
+                const dateA = new Date(a.createdAt);
+                const dateB = new Date(b.createdAt);
+                return dateB - dateA; // 내림차순 정렬 (최신이 먼저)
+            });
+            
             // 서버에서 받은 데이터에는 이미 imageUrls와 imageIds가 포함되어 있음
-            setPosts(postsData);
+            setPosts(sortedPosts);
             
             // 각 게시글에 대한 사용자의 좋아요 상태 조회
             const likesStatus = {};
@@ -103,17 +110,24 @@ export function usePost() {
                 if (countResponse.status === 200) {
                     const likeData = countResponse.data.data;
                     
-                    // 게시글 목록에서 해당 게시글의 좋아요 수 업데이트
-                    setPosts(prevPosts => 
-                        prevPosts.map(post => 
+                    // 게시글 목록에서 해당 게시글의 좋아요 수 업데이트 (정렬 순서 유지)
+                    setPosts(prevPosts => {
+                        const updatedPosts = prevPosts.map(post => 
                             post.postId === postId 
                                 ? {
                                     ...post,
                                     likesCount: likeData.likesCount
                                 }
                                 : post
-                        )
-                    );
+                        );
+                        
+                        // 최신순 정렬 유지
+                        return updatedPosts.sort((a, b) => {
+                            const dateA = new Date(a.createdAt);
+                            const dateB = new Date(b.createdAt);
+                            return dateB - dateA;
+                        });
+                    });
                     
                     // 사용자 좋아요 상태 업데이트
                     setUserLikes(prev => ({
